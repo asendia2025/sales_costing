@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Costing System</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/logo_company_transparency.png">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Varela+Round&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 기본 스타일 (Costing.html 원본 스타일 유지) --- */
+        :root {
+            --sidebar-bg: #1a1b26;
+            --sidebar-text: #a9b1d6;
+            --accent-color: #7b68ee;
+            --accent-hover: #6c5ce7;
+            --main-bg: #f3f4f6;
+            --header-height: 60px;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: var(--main-bg);
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- 로그인 오버레이 스타일 --- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #13141f; /* 배경색: 아주 어두운 네이비 */
+            z-index: 9999; /* 최상단 노출 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .login-box {
+            background-color: #1f2937; /* 카드 배경 */
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid #374151;
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+
+        .login-title {
+            color: white;
+            font-family: 'Varela Round', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            color: #d1d5db;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* 비밀번호 찾기 링크 스타일 */
+        .forgot-pw-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .forgot-pw-link:hover {
+            color: var(--accent-color);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            min-height: 20px;
+            display: none; /* 초기엔 숨김 */
+        }
+        
+        /* 로딩 스피너 */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- 레이아웃 (기존 스타일) --- */
+        .container {
+            display: none; /* 로그인 전에는 숨김 처리 */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- 사이드바 --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2e303e;
+            transition: transform 0.3s ease;
+            z-index: 100;
+            flex-shrink: 0;
+            font-family: 'Varela Round', 'Noto Sans KR', sans-serif;
+        }
+
+        .sidebar-brand {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #2e303e;
+        }
+
+        .brand-logo-img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            background: transparent;
+            border-radius: 8px;
+            padding: 0;
+        }
+
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .org-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .module-title {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15px;
+        }
+
+        .menu-category {
+            margin-bottom: 25px;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            color: #7b88bd;
+            font-weight: 800;
+            margin-bottom: 12px;
+            padding-left: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .menu-list {
+            list-style: none;
+        }
+
+        .menu-item {
+            margin-bottom: 4px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .menu-link:hover {
+            background-color: rgba(123, 104, 238, 0.1);
+            color: white;
+        }
+
+        .menu-link.active {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(123, 104, 238, 0.3);
+        }
+
+        .menu-icon {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            opacity: 0.8;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #2e303e;
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #787c99;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+
+        /* --- 메인 컨텐츠 --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            position: relative;
+            width: 0;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .toggle-btn:hover { background-color: #f3f4f6; }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .breadcrumb .divider { color: #9ca3af; font-weight: 400; }
+        .breadcrumb .current-page { color: var(--accent-color); }
+
+        .iframe-container {
+            flex: 1;
+            background-color: #f8fafc;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .placeholder-logo {
+            width: 180px;
+            height: auto;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+
+        /* --- 반응형 --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                height: 100%;
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 로그인 오버레이 (초기 화면) -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <img src="https://github.com/asendia2025/mfg-capa/blob/main/img/logo_company.png?raw=true" 
+                 alt="Logo" class="login-logo">
+            <h1 class="login-title">Sales System</h1>
+            <p class="login-subtitle">Standard Costing Module Login</p>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="login-input" placeholder="name@company.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="login-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="login-btn" id="login-btn">
+                    <span class="btn-text">Sign In</span>
+                </button>
+            </form>
+            
+            <a href="#" id="forgot-pw-btn" class="forgot-pw-link">Forgot Password?</a>
+
+            <div id="error-message" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- 2. 메인 어플리케이션 (로그인 전에는 display: none) -->
+    <div class="container" id="app-container">
+        
+        <!-- 사이드바 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="https://github.com/asendia2025/mfg-capa/blob/main/img/logo_company.png?raw=true" 
+                     alt="Company Logo" class="brand-logo-img">
+                <div class="brand-info">
+                    <span class="org-name">Sales System</span>
+                    <span class="module-title">Standard Costing</span>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+                
+                <!-- 2.1 OEM 모듈 -->
+                <div class="menu-category">
+                    <div class="category-title">OEM</div>
+                    <ul class="menu-list">
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/asep.html', 'New Product')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                New Product
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/ases.html', 'Repair Service for Tool Makers')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Repair Service for Tool Makers
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/aseo.html', 'Overhaul Service')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Overhaul Service
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/aser.html', 'Reissued Quote')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                                Reissued Quote
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 2.2 CM 모듈 (EVC) -->
+                <div class="menu-category">
+                    <div class="category-title">CM (EVC)</div>
+                    <ul class="menu-list">
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/evcp.html', 'New Product')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                New Product
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/evcs.html', 'Repair Service')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Repair Service
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/evcm.html', 'Modification')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                Modification
+                            </a>
+                        </li>
+                         <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/evcr.html', 'Reissued Quote')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                Reissued Quote
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 2.3 Common 모듈 -->
+                <div class="menu-category">
+                    <div class="category-title">Common</div>
+                    <ul class="menu-list">
+                         <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/asec.html', 'Commercials')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                                Commercials
+                            </a>
+                        </li>
+                        <!-- 구분선 (Separator) -->
+                        <li style="margin: 10px 15px; border-top: 1px solid #2e303e;"></li>
+
+                        <!-- MC Extractor 추가 -->
+                         <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/mc_extractor.html', 'MC Extractor')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                MC Extractor
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- 하단 뒤로가기 -->
+            <div class="sidebar-footer">
+                <!-- Change Password 버튼 추가 -->
+                <a href="#" id="change-pw-btn" class="back-link" style="color: #a9b1d6; margin-bottom: 12px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Change Password
+                </a>
+                
+                <a href="#" id="logout-btn" class="back-link" style="color: #ef4444; margin-bottom: 15px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Sign Out
+                </a>
+                <a href="index.html" class="back-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
+        </aside>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="sidebar-toggle" class="toggle-btn" title="Toggle Sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="breadcrumb">
+                        <span>Costing</span>
+                        <span class="divider">/</span>
+                        <span id="current-module-name" class="current-page">Select a module...</span>
+                    </div>
+                </div>
+                <div style="font-size:0.85rem; color:#6b7280;" id="user-email-display"></div>
+            </header>
+
+            <div class="iframe-container">
+                <!-- 초기 화면 -->
+                <iframe id="content-frame" name="content-frame" src="about:blank"></iframe>
+                
+                <!-- Placeholder (초기 로드 시 보여질 내용) -->
+                <div id="placeholder-msg" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #9ca3af;">
+                    <img src="https://github.com/asendia2025/mfg-capa/blob/main/img/logo_company.png?raw=true" 
+                         alt="Company Logo" 
+                         class="placeholder-logo">
+                    <h2 style="font-size: 1.2rem; font-weight: 500;">Please select a costing module from the left menu</h2>
+                    <p style="font-size: 0.9rem; margin-top: 8px;">Costing System Dashboard</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3. Firebase 및 로직 스크립트 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // sendPasswordResetEmail 추가
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        /* ================================================================
+           [STEP 1] 아래 firebaseConfig 객체를 본인의 설정값으로 교체하세요.
+           Firebase Console > Project Settings > General > Your apps에서 확인 가능
+           ================================================================
+        */
+        const firebaseConfig = {
+  		apiKey: "AIzaSyCwNHcdB0yFHm3fqJAbqMtD4Kx7LBsNpnM",
+  		authDomain: "sales-costing.firebaseapp.com",
+  		projectId: "sales-costing",
+  		storageBucket: "sales-costing.firebasestorage.app",
+  		messagingSenderId: "160253556783",
+  		appId: "1:160253556783:web:54b6daf3a1157864cceeda",
+  		measurementId: "G-E5KL85FC3X" // Google Analytics ID (Optional)
+        };
+
+        // Initialize Firebase
+        let app, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            console.log("Firebase initialized successfully");
+        } catch (e) {
+            console.error("Firebase init error:", e);
+            document.getElementById("error-message").style.display = "block";
+            document.getElementById("error-message").innerText = "Firebase Configuration Error. Please check code settings.";
+        }
+
+        // DOM Elements
+        const loginOverlay = document.getElementById("login-overlay");
+        const appContainer = document.getElementById("app-container");
+        const loginForm = document.getElementById("login-form");
+        const errorMsg = document.getElementById("error-message");
+        const loginBtn = document.getElementById("login-btn");
+        const btnText = loginBtn.querySelector(".btn-text");
+        const userEmailDisplay = document.getElementById("user-email-display");
+        const logoutBtn = document.getElementById("logout-btn");
+        const forgotPwBtn = document.getElementById("forgot-pw-btn");
+        const changePwBtn = document.getElementById("change-pw-btn");
+
+        // Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                console.log("Logged in as:", user.email);
+                userEmailDisplay.textContent = user.email;
+                
+                // Hide Login, Show App
+                loginOverlay.style.display = "none";
+                appContainer.style.display = "flex";
+            } else {
+                // User is signed out
+                console.log("No user logged in");
+                
+                // Show Login, Hide App
+                loginOverlay.style.display = "flex";
+                appContainer.style.display = "none";
+            }
+        });
+
+        // Login Handler
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            // UI Loading State
+            errorMsg.style.display = "none";
+            loginBtn.disabled = true;
+            btnText.textContent = "Signing in...";
+            const spinner = document.createElement("span");
+            spinner.className = "spinner";
+            loginBtn.insertBefore(spinner, btnText);
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Success is handled by onAuthStateChanged
+                    // Just reset button state here just in case
+                })
+                .catch((error) => {
+                    console.error("Login failed", error);
+                    errorMsg.style.display = "block";
+                    
+                    // User friendly error messages
+                    switch (error.code) {
+                        case 'auth/invalid-email':
+                            errorMsg.textContent = "Invalid email address format.";
+                            break;
+                        case 'auth/user-not-found':
+                        case 'auth/wrong-password':
+                        case 'auth/invalid-credential':
+                            errorMsg.textContent = "Incorrect email or password.";
+                            break;
+                        case 'auth/too-many-requests':
+                            errorMsg.textContent = "Too many failed attempts. Try again later.";
+                            break;
+                        default:
+                            errorMsg.textContent = "Login failed: " + error.message;
+                    }
+                })
+                .finally(() => {
+                    // Reset Button
+                    loginBtn.disabled = false;
+                    btnText.textContent = "Sign In";
+                    if(loginBtn.querySelector(".spinner")) {
+                        loginBtn.querySelector(".spinner").remove();
+                    }
+                });
+        });
+
+        // Forgot Password Handler (Login Screen)
+        if (forgotPwBtn) {
+            forgotPwBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const email = document.getElementById("email").value;
+                
+                if (!email) {
+                    errorMsg.style.display = "block";
+                    errorMsg.textContent = "Please enter your email address in the input field above, then click 'Forgot Password?' again.";
+                    return;
+                }
+
+                if (confirm(`Send password reset email to ${email}?`)) {
+                    sendPasswordResetEmail(auth, email)
+                        .then(() => {
+                            alert("Password reset email sent! Please check your inbox.");
+                            errorMsg.style.display = "none";
+                        })
+                        .catch((error) => {
+                            console.error("Reset Email Error", error);
+                            errorMsg.style.display = "block";
+                            errorMsg.textContent = "Failed to send email: " + error.message;
+                        });
+                }
+            });
+        }
+
+        // Change Password Handler (Sidebar)
+        if (changePwBtn) {
+            changePwBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const user = auth.currentUser;
+                
+                if (user && user.email) {
+                    if (confirm(`Send a password reset email to ${user.email} to change your password?`)) {
+                        sendPasswordResetEmail(auth, user.email)
+                            .then(() => {
+                                alert("Password reset email sent! Please check your inbox to set a new password.");
+                            })
+                            .catch((error) => {
+                                alert("Error: " + error.message);
+                            });
+                    }
+                }
+            });
+        }
+
+        // Logout Handler
+        if(logoutBtn) {
+            logoutBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                signOut(auth).then(() => {
+                    // Sign-out successful.
+                    // onAuthStateChanged will handle UI
+                    // Reload page to clear any iframe state
+                    window.location.reload(); 
+                }).catch((error) => {
+                    console.error("Logout error", error);
+                });
+            });
+        }
+    </script>
+
+    <script>
+        // --- 기존 UI 스크립트 (사이드바 토글 및 모듈 로드) ---
+        
+        // 사이드바 토글 기능
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                if (window.innerWidth > 768) {
+                    if (sidebar.style.transform === 'translateX(-100%)') {
+                        sidebar.style.transform = 'translateX(0)';
+                        sidebar.style.width = '280px';
+                    } else {
+                        sidebar.style.transform = 'translateX(-100%)';
+                        sidebar.style.width = '0';
+                    }
+                }
+            });
+        }
+
+        // 모듈 로드 함수 (window 객체에 할당하여 HTML onclick에서 접근 가능하게 함)
+        window.loadModule = function(url, title) {
+            const frame = document.getElementById('content-frame');
+            const placeholder = document.getElementById('placeholder-msg');
+            const titleEl = document.getElementById('current-module-name');
+            
+            // iframe src 변경
+            frame.src = url;
+            
+            // 제목 변경
+            titleEl.textContent = title;
+
+            // Placeholder 숨김
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+
+            // 활성 메뉴 스타일 처리
+            const links = document.querySelectorAll('.menu-link');
+            links.forEach(link => link.classList.remove('active'));
+            
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+        };
+
+        // 반응형 처리
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                if(sidebar) {
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.width = '280px';
+                }
+            } else {
+                if(sidebar) sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
