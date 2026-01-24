@@ -15,12 +15,12 @@
         /* --- 기본 스타일 (Costing.html 원본 스타일 유지) --- */
         :root {
             --sidebar-bg: #1a1b26;
-            --sidebar-text: #a9b1d6;
+            --sidebar-text: #ffffff;
             --accent-color: #7b68ee;
-            --accent-hover: #6c5ce7;
+            --accent-hover: #9a91ef;
             --main-bg: #f3f4f6;
             --header-height: 60px;
-            --sidebar-width: 280px;
+            --sidebar-width: 250px;
         }
 
         * {
@@ -214,7 +214,7 @@
         }
 
         .org-name {
-            font-size: 0.85rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #fff;
             line-height: 1.2;
@@ -393,7 +393,7 @@
     <!-- 1. 로그인 오버레이 (초기 화면) -->
     <div id="login-overlay">
         <div class="login-box">
-            <img src="https://github.com/asendia2025/mfg-capa/blob/main/img/logo_company.png?raw=true" 
+            <img src="img/logo_company_transparency.png" 
                  alt="Logo" class="login-logo">
             <h1 class="login-title">Sales System</h1>
             <p class="login-subtitle">Standard Costing Module Login</p>
@@ -412,7 +412,7 @@
                 </button>
             </form>
             
-            <a href="#" id="forgot-pw-btn" class="forgot-pw-link">Forgot Password?</a>
+            <a href="#" id="forgot-pw-btn" class="forgot-pw-link">Forgot Password? or Change Password?</a>
 
             <div id="error-message" class="error-msg"></div>
         </div>
@@ -424,10 +424,10 @@
         <!-- 사이드바 -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <img src="https://github.com/asendia2025/mfg-capa/blob/main/img/logo_company.png?raw=true" 
+                <img src="img/logo_company_transparency.png" 
                      alt="Company Logo" class="brand-logo-img">
                 <div class="brand-info">
-                    <span class="org-name">Sales System</span>
+                    <span class="org-name">Quotation System</span>
                     <span class="module-title">Standard Costing</span>
                 </div>
             </div>
@@ -514,6 +514,17 @@
                             <a class="menu-link" onclick="loadModule('costing/mc_extractor.html', 'MC Extractor')">
                                 <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 MC Extractor
+                            </a>
+                        </li>
+                        
+                        <!-- 구분선 (Separator) -->
+                        <li style="margin: 10px 15px; border-top: 1px solid #2e303e;"></li>
+
+                        <!-- Costing Logic 추가가 -->
+                         <li class="menu-item">
+                            <a class="menu-link" onclick="loadModule('costing/costing_logic.html', 'Costing Logic')">
+                                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Costing Logic
                             </a>
                         </li>
                     </ul>
