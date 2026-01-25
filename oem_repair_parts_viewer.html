@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OEM Repair Parts Manager v3</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/logo_company_transparency.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Varela+Round&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // =================================================================
+        // [설정 영역] 여기에 Firebase 설정값을 직접 입력하세요.
+        // =================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAGRRTb0QxwIh92buWKd73SPoSkmk6WoMg",
+            authDomain: "여기에_PROJECT_ID.firebaseapp.com",
+            projectId: "oem-parts-manager"
+        };
+        // =================================================================
+
+        // 전역 변수
+        let db;
+        let auth;
+        let allPartsData = []; 
+        let currentUser = null; // 현재 로그인 유저 정보
+        let searchDebounceTimer; // 검색 딜레이 타이머
+
+        // 폰트 설정
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Varela Round', 'Noto Sans KR', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", "monospace"]
+                    }
+                }
+            }
+        }
+
+        // =================================================================
+        // [1] 초기화 및 데이터 로드
+        // =================================================================
+        window.initApp = async () => {
+            // 키 입력 확인
+            if (firebaseConfig.apiKey.includes("입력하세요")) {
+                alert("HTML 파일을 열어 소스코드 상단의 'firebaseConfig' 변수에 API Key와 Project ID를 입력해주세요.");
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 인증 상태 감지 리스너 (로그인/로그아웃/새로고침 시 자동 실행)
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    updateAuthUI(user);
+                    // 데이터가 있으면 테이블만 다시 그림 (권한에 따라 삭제버튼 표시여부가 달라지므로)
+                    if (allPartsData.length > 0) {
+                        filterData(document.getElementById('searchInput').value);
+                    }
+                });
+
+                // 초기 로그인 시도 (이미 로그인 안되어 있으면 익명 로그인)
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+
+                // 데이터 로드
+                await loadDataFromDB();
+                
+                document.getElementById('mainContent').classList.remove('hidden');
+                loader.classList.add('hidden');
+
+            } catch (error) {
+                console.error(error);
+                loader.classList.add('hidden');
+                alert(`초기화 오류: ${error.message}`);
+            }
+        };
+
+        // DB 데이터 가져오기
+        async function loadDataFromDB() {
+            try {
+                // 최신순 정렬 등을 원하시면 orderBy 추가 가능
+                // const q = query(collection(db, "oem_parts"), orderBy("parts_name"));
+                const q = query(collection(db, "oem_parts"));
+                const querySnapshot = await getDocs(q);
+                
+                allPartsData = [];
+                querySnapshot.forEach((doc) => {
+                    // ID를 포함하여 데이터 저장 (삭제 시 필요)
+                    allPartsData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // 메모리 내 정렬 (Parts Name 기준)
+                allPartsData.sort((a, b) => (a.parts_name || "").localeCompare(b.parts_name || ""));
+
+                // 최초 렌더링
+                filterData("");
+                showToast(`데이터 로드 완료: 총 ${allPartsData.length}건`);
+
+            } catch (e) {
+                console.error(e);
+                showToast("데이터 불러오기 실패", true);
+            }
+        }
+
+        // =================================================================
+        // [2] 렌더링 및 검색 최적화 (Debounce & Limit)
+        // =================================================================
+        
+        // 검색어 입력 시 호출 (0.3초 지연 실행 - 성능 최적화 핵심)
+        window.handleSearchInput = (value) => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                filterData(value);
+            }, 300); // 300ms 딜레이
+        };
+
+        window.filterData = (searchTerm) => {
+            const lowerTerm = searchTerm.toLowerCase();
+            const filtered = allPartsData.filter(item => {
+                if (item.search_keywords) {
+                    return item.search_keywords.includes(lowerTerm);
+                }
+                return (item.erp_code || '').toLowerCase().includes(lowerTerm) || 
+                       (item.parts_name || '').toLowerCase().includes(lowerTerm) ||
+                       (item.parts_spec || '').toLowerCase().includes(lowerTerm);
+            });
+            renderTable(filtered);
+        };
+
+        window.renderTable = (data) => {
+            const tbody = document.getElementById('partsTableBody');
+            const countDisplay = document.getElementById('resultCount');
+            tbody.innerHTML = '';
+            
+            // 결과 수 표시
+            countDisplay.textContent = `검색: ${data.length} 건`;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-slate-500">검색 결과가 없습니다.</td></tr>`;
+                return;
+            }
+
+            // 성능 최적화: 최대 100개만 렌더링 (그 이상은 검색으로 찾도록 유도)
+            const RENDER_LIMIT = 100;
+            const displayData = data.slice(0, RENDER_LIMIT);
+
+            // 관리자 여부 확인 (익명이 아니고 유저가 있어야 함)
+            const isAdmin = currentUser && !currentUser.isAnonymous;
+
+            displayData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-700 hover:bg-slate-700/50 transition duration-150 group text-sm";
+                
+                const unitPrice = item.unit_price ? item.unit_price.toLocaleString() : '-';
+                const serviceCost = item.service_cost ? item.service_cost.toLocaleString() : '-';
+                
+                // Ratio
+                let ratioBadge = '<span class="text-slate-600">-</span>';
+                if (item.unit_price > 0 && item.service_cost > 0) {
+                    const ratio = (item.service_cost / item.unit_price).toFixed(1);
+                    let colorClass = "bg-slate-700 text-slate-300";
+                    if (ratio >= 5.0) colorClass = "bg-red-900/50 text-red-300 border border-red-700/50";
+                    else if (ratio >= 3.0) colorClass = "bg-orange-900/50 text-orange-300 border border-orange-700/50";
+                    else if (ratio >= 2.0) colorClass = "bg-blue-900/50 text-blue-300 border border-blue-700/50";
+                    ratioBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold ${colorClass}">${ratio}x</span>`;
+                }
+
+                // Delete Button (Admin Only)
+                let actionBtn = '';
+                if (isAdmin) {
+                    actionBtn = `
+                        <button onclick="deletePart('${item.id}', '${item.parts_name}')" class="text-slate-600 hover:text-red-400 p-2 transition" title="삭제">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-blue-300 font-medium whitespace-nowrap">${item.erp_code || '-'}</td>
+                    <td class="py-3 px-4 text-slate-200 font-medium">${item.parts_name || '-'}</td>
+                    <td class="py-3 px-4 text-slate-400 max-w-xs truncate" title="${item.parts_spec || ''}">${item.parts_spec || '-'}</td>
+                    <td class="py-3 px-4 text-right text-emerald-400 font-medium cursor-pointer hover:text-emerald-300 whitespace-nowrap" onclick="copyToClipboard('${unitPrice}', '단가')">
+                        ₩ ${unitPrice}
+                    </td>
+                    <td class="py-3 px-4 text-right text-orange-400 font-medium cursor-pointer hover:text-orange-300 whitespace-nowrap" onclick="copyToClipboard('${serviceCost}', '수리비')">
+                        ₩ ${serviceCost}
+                    </td>
+                    <td class="py-3 px-4 text-center">${ratioBadge}</td>
+                    <td class="py-3 px-4 text-center w-12">${actionBtn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 100개 이상일 경우 안내 메시지 추가
+            if (data.length > RENDER_LIMIT) {
+                const infoTr = document.createElement('tr');
+                infoTr.innerHTML = `
+                    <td colspan="7" class="py-4 text-center text-xs text-slate-500 bg-slate-800/50 italic">
+                        ... 외 ${data.length - RENDER_LIMIT}건이 더 있습니다. 검색어를 더 입력해주세요.
+                    </td>`;
+                tbody.appendChild(infoTr);
+            }
+
+            lucide.createIcons();
+        };
+
+        // =================================================================
+        // [3] 인증 및 권한 UI (Auth & UI)
+        // =================================================================
+        
+        function updateAuthUI(user) {
+            const btnLogin = document.getElementById('btnLogin');
+            const btnLogout = document.getElementById('btnLogout');
+            const btnAdd = document.getElementById('btnAddPart');
+            const userEmail = document.getElementById('userEmail');
+
+            if (user && !user.isAnonymous) {
+                // 관리자 로그인 상태
+                btnLogin.classList.add('hidden');
+                btnLogout.classList.remove('hidden');
+                btnAdd.classList.remove('hidden'); // 등록버튼 보임
+                userEmail.textContent = user.email.split('@')[0];
+                userEmail.classList.remove('hidden');
+            } else {
+                // 익명 혹은 로그아웃 상태
+                btnLogin.classList.remove('hidden');
+                btnLogout.classList.add('hidden');
+                btnAdd.classList.add('hidden'); // 등록버튼 숨김
+                userEmail.classList.add('hidden');
+            }
+        }
+
+        window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
+        window.closeLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
+
+        window.handleLogin = async () => {
+            const email = document.getElementById('inputEmail').value;
+            const password = document.getElementById('inputPassword').value;
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                closeLoginModal();
+                showToast("관리자 로그인 성공");
+            } catch (error) {
+                alert("로그인 실패: " + error.message);
+            }
+        };
+
+        window.handleLogout = async () => {
+            if(confirm("로그아웃 하시겠습니까? (읽기 전용 모드로 전환됩니다)")) {
+                await signOut(auth);
+                await signInAnonymously(auth); // 다시 익명으로 전환
+                showToast("로그아웃 되었습니다.");
+            }
+        };
+
+        // =================================================================
+        // [4] 데이터 조작 (Add & Delete)
+        // =================================================================
+
+        window.deletePart = async (id, name) => {
+            if (!confirm(`정말 '${name}' 부품을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+            try {
+                await deleteDoc(doc(db, "oem_parts", id));
+                // 메모리에서도 삭제
+                allPartsData = allPartsData.filter(p => p.id !== id);
+                // 테이블 갱신
+                handleSearchInput(document.getElementById('searchInput').value);
+                showToast("삭제되었습니다.");
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'permission-denied') {
+                    alert("삭제 권한이 없습니다. (관리자 로그인이 필요합니다)");
+                } else {
+                    alert("삭제 오류: " + error.message);
+                }
+            }
+        };
+
+        window.addNewPart = async () => {
+            const erpCode = document.getElementById('newErpCode').value.trim();
+            const partsName = document.getElementById('newPartsName').value.trim();
+            const partsSpec = document.getElementById('newPartsSpec').value.trim();
+            const unitPrice = document.getElementById('newUnitPrice').value;
+            const serviceCost = document.getElementById('newServiceCost').value;
+
+            if (!partsName) {
+                alert("부품명(Parts Name)은 필수입니다.");
+                return;
+            }
+
+            const btn = document.getElementById('btnAddSubmit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `⌛ 저장 중...`; 
+            btn.disabled = true;
+
+            try {
+                const docData = {
+                    erp_code: erpCode,
+                    parts_name: partsName,
+                    parts_spec: partsSpec,
+                    unit_price: Number(unitPrice) || 0,
+                    service_cost: Number(serviceCost) || 0,
+                    search_keywords: [erpCode, partsName, partsSpec].join(" ").toLowerCase(),
+                    created_at: new Date().toISOString()
+                };
+
+                const docRef = await addDoc(collection(db, "oem_parts"), docData);
+                
+                // 메모리에 즉시 추가 (새로고침 없이 반영)
+                allPartsData.push({ id: docRef.id, ...docData });
+                // 정렬 다시
+                allPartsData.sort((a, b) => (a.parts_name || "").localeCompare(b.parts_name || ""));
+                
+                showToast("저장되었습니다.");
+                toggleAddModal();
+                
+                // 폼 초기화
+                document.getElementById('newErpCode').value = '';
+                document.getElementById('newPartsName').value = '';
+                document.getElementById('newPartsSpec').value = '';
+                document.getElementById('newUnitPrice').value = '';
+                document.getElementById('newServiceCost').value = '';
+
+                // 테이블 갱신
+                handleSearchInput(document.getElementById('searchInput').value);
+
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'permission-denied') {
+                    alert("권한 오류: 관리자 계정으로 로그인해주세요.");
+                } else {
+                    alert("저장 실패: " + error.message);
+                }
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // 기타 모달 및 유틸리티
+        window.toggleAddModal = () => {
+            const modal = document.getElementById('addModal');
+            modal.classList.toggle('hidden');
+            if(!modal.classList.contains('hidden')) document.getElementById('newErpCode').focus();
+        };
+
+        window.copyToClipboard = (text, label) => {
+            if(text === '-') return;
+            const cleanText = text.replace(/,/g, '');
+            navigator.clipboard.writeText(cleanText).then(() => showToast(`${label} 복사: ${cleanText}`));
+        };
+
+        window.showToast = (msg, isError = false) => {
+            const toast = document.getElementById('toast');
+            const icon = isError ? 'alert-triangle' : 'check-circle';
+            const colorClass = isError ? 'bg-orange-600' : 'bg-slate-700';
+            toast.className = `fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 flex items-center gap-3 z-[100] text-white font-medium ${colorClass} translate-y-0 opacity-100`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span>${msg}</span>`;
+            lucide.createIcons();
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        };
+
+        // 실행 시작
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+    <style>
+        body { font-family: 'Varela Round', 'Noto Sans KR', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .modal-content { animation: modalSlideIn 0.3s ease-out forwards; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen flex flex-col overflow-hidden font-sans">
+
+    <div id="toast" class="fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 flex items-center gap-3 z-[100] text-white font-medium bg-slate-700 translate-y-20 opacity-0"></div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content bg-slate-800 p-6 rounded-xl shadow-2xl w-full max-w-sm border border-slate-700">
+            <h3 class="text-xl font-bold text-white mb-4">관리자 로그인</h3>
+            <input type="email" id="inputEmail" class="w-full mb-3 bg-slate-900 border border-slate-600 rounded px-3 py-2" placeholder="Email">
+            <input type="password" id="inputPassword" class="w-full mb-6 bg-slate-900 border border-slate-600 rounded px-3 py-2" placeholder="Password" onkeydown="if(event.key==='Enter') handleLogin()">
+            <div class="flex gap-2">
+                <button onclick="closeLoginModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded text-slate-300">취소</button>
+                <button onclick="handleLogin()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2 rounded text-white font-bold">로그인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loader" class="hidden fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+        <p class="text-blue-400 animate-pulse font-medium">System Initializing...</p>
+    </div>
+
+    <!-- Add Part Modal -->
+    <div id="addModal" class="hidden fixed inset-0 z-[50] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg border border-slate-700 overflow-hidden">
+            <div class="bg-slate-700/50 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-green-400"></i> 부품 등록
+                </h3>
+                <button onclick="toggleAddModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">ERP Code</label><input type="text" id="newErpCode" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Parts Name *</label><input type="text" id="newPartsName" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-400 mb-1">Specification</label><input type="text" id="newPartsSpec" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Unit Price</label><input type="number" id="newUnitPrice" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Service Cost</label><input type="number" id="newServiceCost" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm"></div>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button onclick="toggleAddModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 py-2.5 rounded-lg">취소</button>
+                    <button id="btnAddSubmit" onclick="addNewPart()" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2.5 rounded-lg font-bold">저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden flex flex-col h-full">
+        <header class="bg-slate-800 border-b border-slate-700 shadow-md z-10">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded flex items-center justify-center shadow-lg">
+                        <i data-lucide="settings" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold tracking-tight text-white hidden sm:block">OEM <span class="text-slate-400 font-light">Parts Manager V1.0</span></h1>
+                </div>
+                
+                <div class="flex-1 max-w-xl relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                    </div>
+                    <!-- oninput 이벤트를 handleSearchInput으로 연결 (Debounce) -->
+                    <input type="text" id="searchInput" 
+                        class="block w-full pl-10 pr-3 py-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-300 focus:outline-none focus:border-blue-500 transition-all duration-200" 
+                        placeholder="검색..." oninput="handleSearchInput(this.value)">
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs text-slate-500 hidden md:block" id="resultCount"></span>
+                    
+                    <!-- Auth Buttons -->
+                    <span id="userEmail" class="text-xs text-blue-300 font-bold hidden mr-2"></span>
+                    <button id="btnLogin" onclick="openLoginModal()" class="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded transition">Admin Login</button>
+                    <button id="btnLogout" onclick="handleLogout()" class="hidden text-sm bg-red-900/50 hover:bg-red-900/80 text-red-200 px-3 py-1.5 rounded transition">Logout</button>
+
+                    <!-- Add Button (Admin Only) -->
+                    <button id="btnAddPart" onclick="toggleAddModal()" class="hidden bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded text-sm font-bold shadow-lg flex items-center gap-1 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i><span class="hidden sm:inline">등록</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-auto bg-slate-900 relative">
+            <div class="max-w-7xl mx-auto">
+                <table class="min-w-full text-left">
+                    <thead class="bg-slate-800/90 backdrop-blur sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase w-32 border-b border-slate-700">Code</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase border-b border-slate-700">Parts Name</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase border-b border-slate-700">Spec</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase text-right w-28 border-b border-slate-700">Unit</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase text-right w-28 border-b border-slate-700">Service</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase text-center w-20 border-b border-slate-700">Ratio</th>
+                            <th class="px-4 py-3 text-xs font-bold text-slate-400 uppercase text-center w-12 border-b border-slate-700">Del</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partsTableBody" class="divide-y divide-slate-700/50"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
