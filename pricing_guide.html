@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASENDIA 가격 산정 기준 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard', 'Malgun Gothic', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        
+        /* 탭 전환 애니메이션 및 스타일 */
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-active { 
+            background-color: #0284c7; 
+            color: white; 
+            font-weight: 700;
+            box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.2);
+        }
+        .tab-inactive { 
+            background-color: #f3f4f6; 
+            color: #64748b; 
+            font-weight: 500;
+        }
+        .tab-inactive:hover { 
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-600 text-white p-2 rounded-lg">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900">ASENDIA 가격 산정 기준 가이드</h1>
+                </div>
+                <div class="text-sm text-gray-500">
+                    <span class="bg-gray-100 px-3 py-1 rounded-full font-medium text-xs border border-gray-200">Update : 2026. January</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Tabs (Rounded Button Style) -->
+        <div class="flex justify-center mb-10" role="tablist">
+            <div class="bg-white p-1.5 rounded-full border border-gray-200 shadow-sm inline-flex gap-2">
+                <button onclick="switchTab('general')" id="tab-general" class="tab-active tab-btn px-8 py-3 rounded-full text-base focus:outline-none">
+                    1. 제품가 산정 일반론 (Theory)
+                </button>
+                <button onclick="switchTab('asendia')" id="tab-asendia" class="tab-inactive tab-btn px-8 py-3 rounded-full text-base focus:outline-none">
+                    2. ASENDIA 산정 기준 (Standard)
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 1: General Theory -->
+        <div id="content-general" class="space-y-8 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                    <span class="w-1.5 h-8 bg-brand-600 rounded-r mr-3"></span>
+                    Cost-Plus Model 구조
+                </h2>
+                <p class="text-gray-600 mb-8 leading-relaxed">
+                    ASENDIA는 <strong>글로벌 반도체 장비사 또는 부품사</strong>에서 통용되는 <strong>Cost-Plus Model</strong>을 기반으로 판매가를 산정합니다.
+                    이는 제조원가에 판매관리비와 적정 이익을 더하는 구조입니다.
+                </p>
+
+                <!-- Visual Structure -->
+                <div class="flex flex-col md:flex-row gap-4 mb-10">
+                    <div class="flex-1 bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-brand-500 transition-colors group">
+                        <div class="text-xs font-bold text-gray-400 uppercase mb-1">Step 1</div>
+                        <div class="font-bold text-lg text-gray-800 mb-2 group-hover:text-brand-600">Prime Cost</div>
+                        <div class="text-sm text-gray-600">직접 재료비<br>+ 직접 노무비</div>
+                    </div>
+                    <div class="flex items-center justify-center text-gray-300">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="flex-1 bg-brand-50 rounded-xl p-5 border border-brand-200 hover:border-brand-500 transition-colors group">
+                        <div class="text-xs font-bold text-brand-400 uppercase mb-1">Step 2</div>
+                        <div class="font-bold text-lg text-brand-800 mb-2 group-hover:text-brand-600">MOH</div>
+                        <div class="text-sm text-brand-700">제조 간접비<br>(설비, 유틸리티 등)</div>
+                    </div>
+                    <div class="flex items-center justify-center text-gray-300">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="flex-1 bg-indigo-50 rounded-xl p-5 border border-indigo-200 hover:border-indigo-500 transition-colors group">
+                        <div class="text-xs font-bold text-indigo-400 uppercase mb-1">Step 3</div>
+                        <div class="font-bold text-lg text-indigo-800 mb-2 group-hover:text-indigo-600">SG&A</div>
+                        <div class="text-sm text-indigo-700">판매 관리비<br>(영업, 마케팅, 경영)</div>
+                    </div>
+                    <div class="flex items-center justify-center text-gray-300">
+                        <i class="fas fa-equals"></i>
+                    </div>
+                    <div class="flex-1 bg-emerald-50 rounded-xl p-5 border border-emerald-200 hover:border-emerald-500 transition-colors group">
+                        <div class="text-xs font-bold text-emerald-600 uppercase mb-1">Final</div>
+                        <div class="font-bold text-lg text-emerald-900 mb-2 group-hover:text-emerald-700">판매가</div>
+                        <div class="text-sm text-emerald-700">총 원가<br>+ 영업이익(Profit)</div>
+                    </div>
+                </div>
+
+                <!-- Deep Dive: Why Allocation Base? -->
+                <div class="bg-gray-50 rounded-xl border border-gray-200 p-6 mb-8">
+                    <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> 핵심 논리: MOH 산정의 현실적 접근
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Logic 1 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center font-bold text-gray-500">1</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-1">MOH를 실제 비용으로 적용하지 않는 이유</h4>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    이론적으로는 실제 비용 적용이 맞지만, 실무에서 공장 운영비(전기세, 임대료, 설비 감가상각 등)를 
+                                    제품 단위로 정확히 귀속시키는 것은 불가능합니다. (예: 특정 모델이 에이징룸을 몇 분 점유했는지, 전기를 몇 kWh 썼는지 측정 불가)
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Logic 2 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center font-bold text-gray-500">2</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-1">Allocation Base (배부 기준)의 필요성</h4>
+                                <p class="text-sm text-gray-600 leading-relaxed mb-2">
+                                    따라서 원가회계에서는 간접비를 <strong>Cost Driver(원가 동인)</strong>에 따라 배부합니다.
+                                    RF Generator/Matcher 제조 특성상 <strong>Direct Labor(직접 인건비)</strong>가 가장 현실적인 기준입니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Logic 3 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center font-bold text-brand-600">3</div>
+                            <div class="bg-white p-4 rounded-lg border border-brand-100 shadow-sm w-full">
+                                <h4 class="font-bold text-brand-700 mb-2">왜 하필 "Labor × 200%" 인가?</h4>
+                                <p class="text-sm text-gray-700 leading-relaxed mb-3">
+                                    <strong>"사람 손이 많이 가는 제품일수록 공장 체류 시간이 길고, 간접비 소모도 크다"</strong>는 논리입니다.
+                                </p>
+                                <div class="flex items-center text-xs font-medium text-gray-500 bg-gray-50 rounded p-2 justify-center gap-2">
+                                    <span>Labor Time ↑</span>
+                                    <i class="fas fa-arrow-right text-gray-400"></i>
+                                    <span>공장 체류/설비 사용 ↑</span>
+                                    <i class="fas fa-arrow-right text-gray-400"></i>
+                                    <span class="text-brand-600 font-bold">간접비(MOH) 소모 ↑</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Industry Standards Summary Tables -->
+                <div>
+                    <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-chart-bar text-gray-400 mr-2"></i> 업계 일반 산정 기준 (Summary)
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        
+                        <!-- MOH Table -->
+                        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                            <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 text-sm flex justify-between items-center">
+                                <span>MOH 비율 (vs Direct Labor)</span>
+                                <i class="fas fa-cogs text-gray-400"></i>
+                            </div>
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
+                                    <tr>
+                                        <th class="px-5 py-2 font-medium">구분</th>
+                                        <th class="px-5 py-2 font-medium text-right">비율</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr>
+                                        <td class="px-5 py-3 text-gray-600">보수적 (Conservative)</td>
+                                        <td class="px-5 py-3 font-medium text-gray-900 text-right">80 ~ 120%</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-5 py-3 text-gray-600">일반적 (General)</td>
+                                        <td class="px-5 py-3 font-medium text-gray-900 text-right">120 ~ 180%</td>
+                                    </tr>
+                                    <tr class="bg-blue-50/30">
+                                        <td class="px-5 py-3 text-brand-700 font-semibold">고정비 높은 구조</td>
+                                        <td class="px-5 py-3 font-bold text-brand-700 text-right">180 ~ 250%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- SG&A Table -->
+                        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                            <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 text-sm flex justify-between items-center">
+                                <span>매출 대비 SG&A 비율 (Revenue 기준)</span>
+                                <i class="fas fa-briefcase text-gray-400"></i>
+                            </div>
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
+                                    <tr>
+                                        <th class="px-5 py-2 font-medium">회사 규모</th>
+                                        <th class="px-5 py-2 font-medium text-right">SG&A / 매출</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr>
+                                        <td class="px-5 py-3 text-gray-600">대기업</td>
+                                        <td class="px-5 py-3 font-medium text-gray-900 text-right">10 ~ 15%</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-5 py-3 text-gray-600">중견 제조사</td>
+                                        <td class="px-5 py-3 font-medium text-gray-900 text-right">15 ~ 25%</td>
+                                    </tr>
+                                    <tr class="bg-indigo-50/30">
+                                        <td class="px-5 py-3 text-indigo-700 font-semibold">중소/전문화 기업</td>
+                                        <td class="px-5 py-3 font-bold text-indigo-700 text-right">20 ~ 35%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Section 2: ASENDIA Standards -->
+        <div id="content-asendia" class="hidden space-y-8 animate-fade-in">
+            
+            <!-- Standard Rates Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-8 py-5 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">ASENDIA 제품 판매가 산정 기준</h2>
+                </div>
+                <div class="p-8">
+                    <!-- 3 Major Indicators -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-10">
+                        <div class="p-6 bg-white border border-gray-200 rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1">
+                            <div class="text-sm font-semibold text-gray-500 mb-2">MOH (제조간접비)</div>
+                            <div class="text-4xl font-extrabold text-brand-600 mb-2 tracking-tight">200%</div>
+                            <div class="text-xs text-gray-400 font-medium">직접 인건비 대비</div>
+                            <div class="mt-4 text-xs font-semibold bg-gray-100 text-gray-600 py-1.5 px-3 rounded-full inline-block">
+                                Range: 180 ~ 250%
+                            </div>
+                        </div>
+                        <div class="p-6 bg-white border border-gray-200 rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1">
+                            <div class="text-sm font-semibold text-gray-500 mb-2">SG&A (판관비)</div>
+                            <div class="text-4xl font-extrabold text-indigo-600 mb-2 tracking-tight">22%</div>
+                            <div class="text-xs text-gray-400 font-medium">제조원가 대비</div>
+                            <div class="mt-4 text-xs font-semibold bg-gray-100 text-gray-600 py-1.5 px-3 rounded-full inline-block">
+                                Range: 20 ~ 35%
+                            </div>
+                        </div>
+                        <div class="p-6 bg-white border border-gray-200 rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1">
+                            <div class="text-sm font-semibold text-gray-500 mb-2">Profit (영업이익)</div>
+                            <div class="text-4xl font-extrabold text-emerald-600 mb-2 tracking-tight">20%</div>
+                            <div class="text-xs text-gray-400 font-medium">Full Cost 대비</div>
+                            <div class="mt-4 text-xs font-semibold bg-gray-100 text-gray-600 py-1.5 px-3 rounded-full inline-block">
+                                Range: 15 ~ 25%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NRE & BOM Section -->
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- NRE Detail Card (Span 2) -->
+                        <div class="md:col-span-2 bg-orange-50 rounded-xl border border-orange-100 p-6">
+                            <h4 class="font-bold text-orange-900 mb-3 flex items-center text-lg">
+                                <i class="fas fa-exclamation-circle mr-2"></i> NRE Cost (초기 개발비)
+                            </h4>
+                            <p class="text-sm text-orange-800 mb-4 leading-relaxed font-medium">
+                                특정 고객 및 프로젝트를 위해 한 번만 발생하는 비용으로, 양산 수량과 비례하지 않으므로 제품 단가와 분리하여 관리해야 합니다.
+                            </p>
+                            
+                            <!-- NRE Components -->
+                            <div class="bg-white rounded-lg border border-orange-200 p-4">
+                                <h5 class="text-xs font-bold text-gray-500 uppercase mb-3 border-b border-gray-100 pb-2">RF Generator / Matcher NRE 구성 항목</h5>
+                                <div class="grid sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800 mb-1"><i class="fas fa-microchip text-orange-400 w-5"></i> Engineering</div>
+                                        <ul class="text-xs text-gray-600 space-y-1 pl-6 list-disc">
+                                            <li>신규 회로 설계 / 변경</li>
+                                            <li>고객 Spec 대응 (주파수/출력)</li>
+                                            <li>F/W, Logic 수정</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800 mb-1"><i class="fas fa-vial text-orange-400 w-5"></i> Validation</div>
+                                        <ul class="text-xs text-gray-600 space-y-1 pl-6 list-disc">
+                                            <li>신뢰성 시험 (Burn-in, Thermal)</li>
+                                            <li>고객 요구 시험 (장비사 Spec)</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800 mb-1"><i class="fas fa-tools text-orange-400 w-5"></i> Tooling</div>
+                                        <ul class="text-xs text-gray-600 space-y-1 pl-6 list-disc">
+                                            <li>전용 Fixture / Jig 제작</li>
+                                            <li>Calibration Setup</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800 mb-1"><i class="fas fa-file-alt text-orange-400 w-5"></i> Documentation</div>
+                                        <ul class="text-xs text-gray-600 space-y-1 pl-6 list-disc">
+                                            <li>고객 제출용 Report</li>
+                                            <li>Spec Sheet / Test Proc.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BOM Notice (Span 1) -->
+                        <div class="bg-blue-50 rounded-xl border border-blue-100 p-6 flex flex-col justify-center">
+                            <h4 class="font-bold text-blue-900 mb-3 text-lg flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i> BOM 등록 원칙
+                            </h4>
+                            <p class="text-sm text-blue-800 leading-relaxed mb-4">
+                                Screw, 라벨, 포장재 등 소모품도 반드시 BOM에 등록해야 합니다. 사소한 누락이 누적되면 이익률에 치명적인 영향을 줍니다.
+                            </p>
+                            <div class="bg-white/60 rounded p-3 text-center border border-blue-200">
+                                <span class="text-xs font-bold text-blue-600">연구소 BOM 등록자 = 수익성 1차 책임자</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service & CM Tables -->
+            <div class="grid lg:grid-cols-2 gap-8">
+                
+                <!-- Repair Service -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 class="font-bold text-gray-900">수리 서비스 비용 산정</h3>
+                        <span class="text-xs font-semibold bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded">MOH/SG&A 미적용</span>
+                    </div>
+                    <div class="p-6">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">구분</th>
+                                    <th class="px-4 py-3 rounded-r-lg">산정 기준</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">일반 기준</td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        <div class="flex flex-col gap-1">
+                                            <span>• 인력 투입: 4시간/대</span>
+                                            <span>• 인건비: 50만원 (고정)</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">장비사 적용</td>
+                                    <td class="px-4 py-3 text-gray-600">부품비 × 3배</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">SK하이닉스</td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        <div class="flex flex-col gap-1">
+                                            <span>• 부품비: 장비사 기준의 1.25배</span>
+                                            <span>• 인건비: 25만원 수준</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-brand-600">Overhaul</td>
+                                    <td class="px-4 py-3 text-gray-600">신제품 산정 구조와 동일 적용</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CM (EVC) Service -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 class="font-bold text-gray-900">CM (EVC) 제품/수리 기준</h3>
+                        <span class="text-xs font-semibold bg-brand-50 border border-brand-100 text-brand-700 px-2 py-1 rounded">협약 기준</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-4 text-xs text-right text-gray-500 font-medium">
+                            * 환율 기준: 1,350원 ('24) → 1,450원 ('26)
+                        </div>
+                        <div class="space-y-4">
+                            <!-- New Product CM -->
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <h4 class="text-sm font-bold text-gray-800 mb-3">신제품 산정 (부품비 기준 %)</h4>
+                                <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                                    <div class="bg-white p-2 rounded-lg border shadow-sm">
+                                        <div class="text-gray-500 mb-1">MOH</div>
+                                        <div class="font-bold text-brand-600 text-sm">3%</div>
+                                    </div>
+                                    <div class="bg-white p-2 rounded-lg border shadow-sm">
+                                        <div class="text-gray-500 mb-1">SG&A</div>
+                                        <div class="font-bold text-indigo-600 text-sm">3%</div>
+                                    </div>
+                                    <div class="bg-white p-2 rounded-lg border shadow-sm">
+                                        <div class="text-gray-500 mb-1">Delivery</div>
+                                        <div class="font-bold text-gray-800 text-sm">2%</div>
+                                    </div>
+                                    <div class="bg-white p-2 rounded-lg border shadow-sm">
+                                        <div class="text-gray-500 mb-1">Profit</div>
+                                        <div class="font-bold text-emerald-600 text-sm">7%</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Repair CM -->
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <h4 class="text-sm font-bold text-gray-800 mb-2">수리/개조 산정</h4>
+                                <ul class="text-xs text-gray-600 space-y-1.5 list-disc pl-4">
+                                    <li><strong>수리:</strong> MOH/SG&A 3%, 이익률 20%</li>
+                                    <li><strong>개조:</strong> 동일 모델 신품 가격 기준의 절대값 적용 (MOH, SG&A, Profit)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-5xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p class="mb-2 font-medium">ASENDIA 경영지원실 · 영업부</p>
+            <p>본 자료는 내부 교육 및 견적 산출용이며, 외부 유출을 금합니다.</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all content
+            document.getElementById('content-general').classList.add('hidden');
+            document.getElementById('content-asendia').classList.add('hidden');
+            
+            // Reset tab styles
+            document.getElementById('tab-general').className = "tab-inactive tab-btn px-8 py-3 rounded-full text-base focus:outline-none";
+            document.getElementById('tab-asendia').className = "tab-inactive tab-btn px-8 py-3 rounded-full text-base focus:outline-none";
+            
+            // Show selected content and activate tab
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).className = "tab-active tab-btn px-8 py-3 rounded-full text-base focus:outline-none";
+        }
+    </script>
+</body>
+</html>
