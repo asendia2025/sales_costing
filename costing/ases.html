@@ -717,8 +717,12 @@
             if(dLaborEl) dLaborEl.innerText = laborText;
             
             // Update Labor Cost Display in Details
-            document.getElementById('d-labor-cost').innerText = laborCostPerUnit.toLocaleString();
-            document.getElementById('d-rnd-cost').innerText = rndFeeVal.toLocaleString();
+            // [FIXED] Null check added to prevent crash since d-rnd-cost is commented out in HTML
+            const elLaborCost = document.getElementById('d-labor-cost');
+            if(elLaborCost) elLaborCost.innerText = laborCostPerUnit.toLocaleString();
+            
+            const elRndCost = document.getElementById('d-rnd-cost');
+            if(elRndCost) elRndCost.innerText = rndFeeVal.toLocaleString();
 
             updatePreview(finalTotal, breakdownHtml);
         }
