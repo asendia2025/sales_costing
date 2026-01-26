@@ -47,6 +47,7 @@
     </script>
 
     <!-- Sales Reps Data -->
+
     <script>
         const SALES_REPS_DB = [
             { id: "dypark", name: "박다연", position: "대리", dept: "영업팀", email: "dypark@ase-semi.com", tel: "031-329-0061", hp: "010-7274-2617" },
@@ -58,6 +59,7 @@
             { id: "tjben", name: "변태준", position: "상무", dept: "영업본부", email: "tjben@ase-semi.com", tel: "031-329-0000", hp: "010-2376-3891" }
         ];
     </script>
+
 
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; }
@@ -99,7 +101,7 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">OEM Repair Costing</h2>
-                        <p class="text-xs text-gray-500">Service Costing System (V1.4)</p>
+                        <p class="text-xs text-gray-500">Service Costing System (V1.5)</p>
                     </div>
                 </div>
                 <img src="img/logo_company_transparency.png" alt="Company Logo" class="h-10 object-contain opacity-80" onerror="this.style.display='none'">
@@ -256,6 +258,18 @@
                     </div>
                     <div id="selectedPartsList" class="space-y-1">
                         <!-- Items injected here -->
+                    </div>
+                </div>
+
+                <!-- R&D Engineer Fee Input (Added Feature) -->
+                <div class="mt-4 bg-white p-3 rounded border border-blue-100 flex justify-between items-center shadow-sm">
+                    <label class="text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <i data-lucide="user-cog" class="w-3 h-3 text-blue-500"></i>
+                        <span id="lbl-rnd-fee">R&D Engineer Fee</span>
+                    </label>
+                    <div class="flex items-center gap-1">
+                         <span class="text-gray-500 text-xs">₩</span>
+                         <input type="number" id="rndFee" value="500000" step="10000" class="w-24 p-1.5 border rounded text-right text-xs font-bold focus:ring-1 focus:ring-blue-500 font-mono" oninput="recalcAll()">
                     </div>
                 </div>
                 
@@ -419,9 +433,18 @@
                             <!-- Injected -->
                         </tbody>
                     </table>
-                     <!-- Labor Cost Display in Detail -->
+                     <!-- Labor & R&D Cost Display in Detail -->
                     <div class="mt-4 pt-2 border-t border-gray-300 text-right font-bold text-gray-700">
-                        Labor Cost Included: ₩<span id="d-labor-cost">500,000</span>
+                        <div class="flex justify-between items-center mb-1">
+                            <span>Labor Cost:</span>
+                            <span>₩<span id="d-labor-cost">500,000</span></span>
+                        </div>
+<!--
+                        <div class="flex justify-between items-center text-blue-700">
+                            <span>R&D Engineer Fee:</span>
+                            <span>₩<span id="d-rnd-cost">500,000</span></span>
+                        </div>
+-->
                     </div>
                 </div>
            </div>
@@ -460,7 +483,8 @@
                 detailTitle: "2. 상세 내역",
                 serviceName: "수리 서비스",
                 
-                inputTotal: "총 견적 금액"
+                inputTotal: "총 견적 금액",
+                rndFee: "R&D 엔지니어 Fee"
             },
             en: {
                 btnPrint: "PDF",
@@ -486,7 +510,8 @@
                 detailTitle: "2. Details",
                 serviceName: "Repair Service",
 
-                inputTotal: "Total Quote Amount"
+                inputTotal: "Total Quote Amount",
+                rndFee: "R&D Engineer Fee"
             }
         };
 
@@ -511,7 +536,7 @@
 
         function initListeners() {
             ['quoteDate', 'quoteNoSeq', 'customerName', 'customerContact', 'productModel', 'productPn', 'productType',
-             'termLeadTime', 'termPayment', 'termIncoterms', 'remarks'].forEach(id => {
+             'termLeadTime', 'termPayment', 'termIncoterms', 'remarks', 'rndFee'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.addEventListener('input', () => updatePreview());
             });
@@ -555,12 +580,6 @@
                 querySnapshot.forEach((doc) => {
                     const d = doc.data();
                     
-                    // Debug: 첫 번째 문서의 구조 확인
-                    if (matches.length === 0) {
-                        console.log("Sample document structure:", d);
-                        console.log("Available fields:", Object.keys(d));
-                    }
-                    
                     // Firebase 실제 필드명 사용
                     const code = d.erp_code || "";
                     const name = d.parts_name || "";
@@ -585,13 +604,6 @@
                 if (matches.length === 0) {
                     resDiv.innerHTML = `
                         <span class='text-red-400'>No parts found for "${keyword}".</span>
-                        <details class='mt-2'>
-                            <summary class='text-xs text-gray-400 cursor-pointer'>Debug Info</summary>
-                            <div class='text-xs text-gray-500 mt-1'>
-                                Total docs: ${querySnapshot.size}<br>
-                                Check console for field names
-                            </div>
-                        </details>
                     `;
                 } else {
                     resDiv.innerHTML = "";
@@ -668,6 +680,9 @@
 
         function recalcAll() {
             const laborType = document.querySelector('input[name="laborType"]:checked').value;
+            // Get R&D Fee
+            const rndFeeVal = parseFloat(document.getElementById('rndFee').value) || 0;
+
             let totalAmount = 0;
             let breakdownHtml = "";
             const t = LANG[currentLang];
@@ -688,10 +703,11 @@
                 `;
             });
 
-            // Calculate Total: (Sum of (Base * Multi * Qty)) + Labor Cost
+            // Calculate Total: (Sum of (Base * Multi * Qty)) + Labor Cost + R&D Fee
             const totalPartsCost = selectedParts.reduce((sum, p) => sum + (p.basePrice * materialMultiplier * p.qty), 0);
-            //const finalTotal = Math.round(totalPartsCost + laborCostPerUnit);
-	    const finalTotal = Math.round((totalPartsCost + laborCostPerUnit) / 1000) * 1000;  // 천원 단위 반올림
+            
+            // Round to 1000
+            const finalTotal = Math.round((totalPartsCost + laborCostPerUnit + rndFeeVal) / 1000) * 1000;
 
             document.getElementById('valTotal').innerText = finalTotal.toLocaleString();
             
@@ -702,6 +718,7 @@
             
             // Update Labor Cost Display in Details
             document.getElementById('d-labor-cost').innerText = laborCostPerUnit.toLocaleString();
+            document.getElementById('d-rnd-cost').innerText = rndFeeVal.toLocaleString();
 
             updatePreview(finalTotal, breakdownHtml);
         }
@@ -739,6 +756,7 @@
             setTxt('lbl-input-rem', t.inputRem);
             setTxt('lbl-rep-section', t.repSection);
             setTxt('lbl-input-total', t.inputTotal);
+            setTxt('lbl-rnd-fee', t.rndFee);
             
             // New Product Info Labels
             setTxt('lbl-prod-info', t.prodInfo || "Product Info");
@@ -802,27 +820,12 @@
             setTxt('lbl-terms-title', t.termsTitle);
             setTxt('lbl-detail-title', t.detailTitle);
             
-            // Detail Headers Update
-            // Re-render table header? Or just update breakdown via recalcAll
-            // But headers are static HTML in detail section. Need IDs to update them.
-            // Let's rely on recalcAll rebuilding the breakdown HTML for content, but headers are static.
-            // Wait, in previous code, breakdown table header was static.
-            // Let's add IDs to detail table headers or rebuild whole table structure.
-            // To be safe, just rebuild table in recalcAll is tricky as header is outside.
-            // I will update header text content directly here.
-            // We need to target the headers.
-            // Let's add IDs to th in Detail Section
-            // Actually, in `ases.html` detail section is static HTML.
-            // I will select them by querySelector inside detail section.
             const detailThead = document.querySelector('#p-detailSection thead tr');
             if(detailThead) {
-                 detailThead.children[0].innerText = t.thPartCode;
-                 detailThead.children[1].innerText = t.thPartName;
-                 detailThead.children[2].innerText = t.thPartQty;
-                 // Removed Base/Applied Cost cols, so only 3 cols now.
+                 // Adjust if translation keys exist
             }
 
-            recalcAll(); // Refresh preview text
+            recalcAll(); 
         }
 
         function toggleDetails() {
