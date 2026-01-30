@@ -251,18 +251,17 @@
                                 <span class="ml-1 w-3">₩</span>
                             </div>
                         </div>
-                        <div class="text-[9px] text-gray-400 pl-1" id="lbl-indirect-note">소모품(나사, 포장박스) - RFG, SRFM = 7만원, DRFM = 13만원, CONT = 2만원</div>
+                        <div class="text-[12px] text-gray-600 pl-1" id="lbl-indirect-note">Indirect M/C (Screws, Packaging Box, Etc.)<br>RFG, SRFM = 100,000, DRFM = 130,000, CONT = 20,000</div>
                     </div>
 
                     <!-- Packaging Cost Removed -->
                     <!-- Delivery Cost Removed -->
 
                     <div class="flex justify-between items-center border-b pb-1 relative pt-2">
-                        <label class="text-gray-600">Assembly Time (hr)</label>
+                        <label class="text-gray-600">Assembly Time (hr) <br>RFG1k=8.00, RFG2k=9.25, SRFM=7.2, DRFM=11.17, CON=3.5 (IQC Time Included)</label>
                         <div class="flex flex-col items-end gap-1 relative w-full">
                              <div class="flex items-center gap-2 justify-end w-full">
-                                <input type="number" id="timeAssy" value="0" oninput="calculateTotal()" class="w-16 text-center p-1 border rounded font-mono"
-                                   title="RFG1k=8.00, RFG2k=9.25, SRFM=7.2, DRFM=11.17, CON=3">
+                                <input type="number" id="timeAssy" value="0" oninput="calculateTotal()" class="w-16 text-center p-1 border rounded font-mono">
                                 <span class="text-gray-400 text-[10px] w-24 text-right" id="dispAssyRate">(@50,000)</span>
                                 <span id="valAssyCost" class="w-20 text-right font-mono text-gray-700">0</span>
                             </div>
@@ -271,10 +270,9 @@
                     </div>
                     
                      <div class="flex justify-between items-center border-b pb-1 pt-3">
-                        <label class="text-gray-600">Test Time (hr)</label>
+                        <label class="text-gray-600">Test Time (hr) <br>RFG1k=6.5, RFG2k=6.5, SRFM=3.9, DRFM=7.5, CON=3</label>
                         <div class="flex items-center gap-2">
-                            <input type="number" id="timeTest" value="0" oninput="calculateTotal()" class="w-16 text-center p-1 border rounded font-mono"
-                               title="RFG1k=6.5, RFG2k=6.5, SRFM=3.9, DRFM=7.5, CON=3">
+                            <input type="number" id="timeTest" value="0" oninput="calculateTotal()" class="w-16 text-center p-1 border rounded font-mono">
                             <span class="text-gray-400 text-[10px] w-24 text-right" id="dispTestRate">(@50,000)</span>
                             <span id="valTestCost" class="w-20 text-right font-mono text-gray-700">0</span>
                         </div>
