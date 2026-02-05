@@ -13,7 +13,7 @@
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SheetJS (Excel Parser) -->
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"1></script>
     <!-- PapaParse (CSV Parser for Cost DB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- Fonts -->
@@ -235,7 +235,7 @@
                 <div class="space-y-3 text-xs">
                     <!-- 4.3 Direct M/C (Manual Key-in) -->
                     <div class="flex justify-between items-center bg-purple-50 p-2 rounded">
-                        <label class="font-bold text-purple-800">Direct M/C</label>
+                        <label class="font-bold text-purple-800">Direct M/C (RFG : M/C + Component Outsourcing Cost)</label>
                         <div class="flex items-center">
                             <input type="text" id="costDirectMC" value="0" oninput="formatNumberInput(this); calculateTotal()" class="w-32 bg-white border border-purple-200 rounded p-1 text-right font-bold font-mono text-purple-700 focus:ring-1 focus:ring-purple-500" placeholder="Direct Input">
                             <span class="ml-1 w-3">₩</span>
@@ -258,7 +258,7 @@
                     <!-- Delivery Cost Removed -->
 
                     <div class="flex justify-between items-center border-b pb-1 relative pt-2">
-                        <label class="text-gray-600">Assembly Time (hr) <br>RFG1k=11.00, RFG2k=13.25, SRFM=7.2, DRFM=11.17, CON=3.5 (IQC Time Included)</label>
+                        <label class="text-gray-600">Assembly Time (hr) <br>RFG1k=7.5, RFG2k=8.5, SRFM=7, DRFM=11, CON=3.5 (IQC Time Included)</label>
                         <div class="flex flex-col items-end gap-1 relative w-full">
                              <div class="flex items-center gap-2 justify-end w-full">
                                 <input type="number" id="timeAssy" value="0" oninput="calculateTotal()" class="w-16 text-center p-1 border rounded font-mono">
@@ -270,7 +270,7 @@
                     </div>
                     
                      <div class="flex justify-between items-center border-b pb-1 pt-3">
-                        <label class="text-gray-600">Test Time (hr) <br>RFG1k=9.5, RFG2k=10.5, SRFM=3.9, DRFM=7.5, CON=3</label>
+                        <label class="text-gray-600">Test Time (hr) <br>RFG1k=6.5, RFG2k=6.5, SRFM=4, DRFM=7.5, CON=3</label>
                         <div class="flex items-center gap-2">
                             <input type="number" id="timeTest" value="0" oninput="calculateTotal()" class="w-16 text-center p-1 border rounded font-mono">
                             <span class="text-gray-400 text-[10px] w-24 text-right" id="dispTestRate">(@50,000)</span>
@@ -538,7 +538,7 @@
                 basicInfo: "기본 정보",
                 costingTitle: "원가 산출 (Costing)",
                 uploadBom: "BOM 파일 업로드 (Click)",
-                qcWarn: "RFG Component Outsourcing Time Included",
+                qcWarn: "RFG Component Outsourcing Time Must be Included in M/C",
                 stdInfo: "기준 정보 (Costing Standards)",
                 inputDate: "견적일", inputNo: "견적 번호", inputCust: "고객사 명", inputContact: "고객 담당자",
                 inputType: "Type", // Just keep Type
@@ -571,7 +571,7 @@
                 basicInfo: "Basic Info",
                 costingTitle: "Costing",
                 uploadBom: "Upload BOM (Click)",
-                qcWarn: "* Include QC Time",
+                qcWarn: "RFG Component Outsourcing Time Must be Included in M/C",
                 stdInfo: "Costing Standards",
                 inputDate: "Date", inputNo: "Quote No", inputCust: "Customer", inputContact: "Contact",
                 inputType: "Type",
