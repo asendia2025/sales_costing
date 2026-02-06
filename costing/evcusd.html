@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVC Quotation (USD)</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/logo_company_transparency.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+
+    <!-- Load Sales Representatives Database -->
+    <script src="sales_representatives_db.js"></script>
+
+    <style>
+        /* Base Fonts - English Only (Varela Round) */
+        body { font-family: 'Varela Round', sans-serif; }
+        
+        /* Input Section Specific Font */
+        #input-section { font-family: 'Varela Round', sans-serif; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #preview-section, #preview-section * { visibility: visible; }
+            #preview-section { 
+                position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
+                box-shadow: none; border: none;
+            }
+            #input-section { display: none; }
+            
+            /* Ensure colors print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c084fc; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col xl:flex-row overflow-hidden">
+
+    <!-- LEFT PANEL: Input Form -->
+    <div id="input-section" class="w-full xl:w-5/12 bg-white p-6 shadow-md overflow-y-auto h-screen sticky top-0 border-t-4 border-purple-600 z-10 flex flex-col">
+        
+        <!-- Header -->
+        <div class="flex flex-col gap-4 mb-6 border-b pb-4 shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="bg-purple-100 p-2 rounded-lg">
+                        <i data-lucide="dollar-sign" class="text-purple-600 w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">EVC Quotation (USD)</h2>
+                        <p class="text-xs text-gray-500">USD Quotation System (V1.0)</p>
+                    </div>
+                </div>
+                <img src="img/logo_company_transparency.png" alt="Company Logo" class="h-10 object-contain opacity-80" onerror="this.style.display='none'">
+            </div>
+            
+            <div class="flex justify-end items-center bg-purple-50 p-2 rounded border border-purple-200">
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold py-2 px-3 rounded shadow-sm transition-colors">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>Print</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <form id="quoteForm" onsubmit="return false;" class="space-y-6 flex-grow">
+            
+            <!-- 1. Basic Info -->
+            <section class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-purple-500"></i> Basic Info
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                        <input type="date" id="quoteDate" class="w-full p-2 border rounded text-xs focus:ring-1 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Quote No.</label>
+                        <div class="flex items-center">
+                            <span id="quoteNoPrefix" class="bg-gray-100 p-2 border border-r-0 rounded-l text-xs text-gray-500 font-mono">EVCP-</span>
+                            <input type="text" id="quoteNoSeq" class="w-full p-2 border rounded-r text-xs font-mono text-center focus:ring-1 focus:ring-purple-500" placeholder="001" value="001">
+                        </div>
+                    </div>
+                    <div class="col-span-2 flex gap-3">
+                        <div class="w-1/2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Customer</label>
+                            <input list="customerList" type="text" id="customerName" placeholder="Select/Input Customer" class="w-full p-2 border rounded text-xs focus:ring-1 focus:ring-purple-500" onchange="updatePreview()">
+                            <datalist id="customerList">
+                                <option value="ASM"></option>
+                                <option value="ASMK"></option>
+                                <option value="FEMS"></option>
+                                <option value="ASMJ"></option>
+                                <option value="ASMA"></option>
+                            </datalist>
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Contact</label>
+                            <input type="text" id="customerContact" placeholder="Contact Person" class="w-full p-2 border rounded text-xs focus:ring-1 focus:ring-purple-500">
+                        </div>
+                    </div>
+                    <div class="col-span-2 flex gap-3">
+                        <div class="w-1/3">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                            <select id="productType" class="w-full p-2 border rounded text-xs focus:ring-1 focus:ring-purple-500 bg-white" onchange="updatePreview()">
+                                <option value="EVC">EVC</option>
+                                <option value="Etc.">Etc.</option>
+                            </select>
+                        </div>
+                        <div class="w-1/3">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Model</label>
+                            <input type="text" id="productModel" placeholder="Model Name" class="w-full p-2 border rounded text-xs font-bold focus:ring-1 focus:ring-purple-500">
+                        </div>
+                        <div class="w-1/3">
+                             <label class="block text-xs font-medium text-gray-600 mb-1">P/N</label>
+                             <input type="text" id="productPn" placeholder="Part Number" class="w-full p-2 border rounded text-xs font-mono focus:ring-1 focus:ring-purple-500">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Price Information (USD) -->
+            <section class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
+                    <i data-lucide="dollar-sign" class="w-4 h-4"></i> Price Information (USD)
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block text-gray-600 font-bold mb-1">Quantity (Set)</label>
+                        <input type="number" id="productQty" value="1" oninput="calculateTotal()" class="w-full p-2 border rounded text-center font-bold focus:ring-1 focus:ring-blue-500 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 font-bold mb-1">Unit Price ($)</label>
+                        <input type="text" id="unitPrice" value="0" oninput="formatNumberInput(this); calculateTotal()" class="w-full p-2 border rounded text-right font-mono font-bold text-blue-700 focus:ring-1 focus:ring-blue-500 bg-white" placeholder="0.00">
+                    </div>
+                    <div class="col-span-2 pt-2 border-t border-blue-200">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-gray-700">Total Amount</span>
+                            <div class="text-lg font-bold text-blue-800 font-mono">
+                                $ <span id="valTotal">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 3. Terms & Sales Rep -->
+            <section class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    <i data-lucide="check-square" class="w-4 h-4 text-purple-500"></i> Terms & Conditions
+                </h3>
+                <div class="space-y-2 text-xs">
+                     <div class="flex items-center gap-2">
+                        <span class="text-gray-500 w-16">Lead</span>
+                        <input type="text" id="termLeadTime" value="2 Weeks after PO" class="flex-1 p-1.5 border rounded text-xs">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 w-16">Pay</span>
+                        <input type="text" id="termPayment" value="Net 30 Days" class="flex-1 p-1.5 border rounded text-xs">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 w-16">Incoterms</span>
+                        <input type="text" id="termIncoterms" value="EXW (Ex Works)" class="flex-1 p-1.5 border rounded text-xs">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 w-16">Note</span>
+                        <textarea id="remarks" rows="1" class="flex-1 p-1.5 border rounded text-xs resize-none focus:ring-1 focus:ring-purple-500 outline-none" placeholder="Remarks"></textarea>
+                    </div>
+                </div>
+
+                <!-- Sales Rep Section -->
+                <div class="bg-purple-50 p-3 rounded border border-purple-100 mt-4">
+                    <h3 class="text-xs font-bold text-purple-800 mb-2 uppercase">Sales Representative</h3>
+                    <select id="salesRepSelect" onchange="changeSalesRep()" class="w-full p-1.5 border border-purple-200 rounded text-xs bg-white cursor-pointer">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </section>
+        </form>
+    </div>
+
+    <!-- RIGHT PANEL: Preview (A4 Paper) -->
+    <div class="w-full xl:w-7/12 bg-gray-500 p-4 xl:p-10 overflow-auto flex justify-center items-start h-screen">
+        
+        <div id="preview-section" class="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[10mm] md:p-[15mm] text-black relative box-border mx-auto transition-all duration-300 font-english">
+            
+            <!-- Header -->
+            <div class="border-b-2 border-purple-900 pb-4 mb-6 relative min-h-[80px]">
+                <div class="text-center w-full pt-4">
+                    <h1 class="text-5xl font-bold tracking-wider text-gray-900 mb-2" id="lbl-title">QUOTATION</h1>
+                </div>
+                <!-- Logo -->
+                <img src="img/logo_company_v.png" alt="Logo" class="h-16 object-contain absolute right-0 top-0" onerror="this.style.display='none'">
+            </div>
+
+            <!-- Info Area -->
+            <div class="flex justify-between items-start mb-8">
+                <div class="flex-1">
+                    <div class="text-2xl font-bold border-b-2 border-black inline-block mb-3 pb-1 min-w-[200px]">
+                        <span id="p-custName"></span> <span class="text-lg font-normal">Attn.</span>
+                    </div>
+                    <div class="space-y-1 text-sm text-gray-700">
+                        <p class="whitespace-nowrap">• <span>Date</span> : <span id="p-date"></span></p>
+                        <p class="whitespace-nowrap">• <span>Validity</span> : <span>30 Days after Quotation</span></p>
+                        <p class="whitespace-nowrap">• <span>Quote No.</span> : <span id="p-no" class="font-mono font-bold text-black"></span></p>
+                        <p class="whitespace-nowrap">• <span>Ref.</span> : <span id="p-custContact" class="font-bold"></span></p>
+                    </div>
+                </div>
+
+                <div class="text-xs text-right text-gray-500 leading-relaxed pt-1">
+                    <p class="font-bold text-base text-black mb-1">ASENDIA Co., Ltd.</p>
+                    <p><span class="font-bold">Reg. No:</span> 142-81-09833</p>
+                    <p><span class="font-bold">Type:</span> Manufacturing / <span class="font-bold">Item:</span> Semiconductor Parts</p>
+                    <p><span class="font-bold">Addr:</span> 113, Masan 6-ro, Jinwi-myeon, Pyeongtaek-si, Gyeonggi-do</p>
+                    <div class="flex items-center justify-end gap-2 mt-2 relative">
+                        <span class="font-bold text-black text-sm">Rep : Moon Soo, Park</span>
+                        <img src="img/company_sign.png" alt="(Sign)" class="h-10 -mt-2 opacity-80" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="mb-4">
+                <table class="w-full border-collapse border border-black text-sm table-fixed">
+                    <thead>
+                        <tr class="bg-gray-100 text-center font-bold text-xs h-8">
+                            <th class="border border-black w-10">No.</th>
+                            <th class="border border-black">Type</th>
+                            <th class="border border-black w-32">Model</th>
+                            <th class="border border-black w-32">P/N</th>
+                            <th class="border border-black w-12">Qty</th>
+                            <th class="border border-black w-32">Unit Price ($)</th>
+                            <th class="border border-black w-32">Amount ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="text-center h-12">
+                            <td class="border border-black p-1">1</td>
+                            <td class="border border-black p-1 font-bold text-gray-800" id="p-typeName">EVC</td>
+                            <td class="border border-black p-1 text-xs" id="p-model"></td>
+                            <td class="border border-black p-1 text-xs font-mono" id="p-pn"></td>
+                            <td class="border border-black p-1" id="p-qty">1</td>
+                            <td class="border border-black p-1 text-right font-mono" id="p-unitPrice">0.00</td>
+                            <td class="border border-black p-1 text-right font-mono font-bold" id="p-amount">0.00</td>
+                        </tr>
+                        <!-- Empty Rows -->
+                        <tr class="h-8 text-center text-gray-300"><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td></tr>
+                        <tr class="h-8 text-center text-gray-300"><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td><td class="border border-black"></td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-purple-50 border-t-2 border-black h-10">
+                            <td colspan="6" class="border border-black p-2 text-center font-bold text-base">Total Amount</td>
+                            <td class="border border-black p-2 text-right font-bold text-lg text-purple-900 font-mono">
+                                $ <span id="p-total">0.00</span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Total Text -->
+            <div class="bg-gray-50 p-3 border border-gray-300 rounded mb-8 text-center">
+                <span class="text-gray-600 text-sm mr-2">Total Amount:</span>
+                <span class="text-purple-800 font-bold text-lg font-mono">$ <span id="p-totalText">0.00</span></span>
+            </div>
+
+             <!-- Terms & Footer -->
+             <div class="mt-auto">
+                <div class="bg-white border-t border-gray-300 pt-4 text-xs text-gray-600">
+                    <h4 class="font-bold text-purple-900 mb-1">Terms & Conditions</h4>
+                    <p>• <span>Lead Time</span>: <span id="p-leadTime"></span></p>
+                    <p>• <span>Payment</span>: <span id="p-payment"></span></p>
+                    <p>• <span>Incoterms</span>: <span id="p-incoterms"></span></p>
+                    <p>• <span>Remarks</span>: <span id="p-remarks"></span></p>
+                </div>
+                
+                <!-- Sales Rep Sign Area -->
+                <div class="border-t-2 border-black mt-4 pt-4 flex justify-between items-end">
+                    <div class="text-xs text-gray-400"></div> 
+                    <div class="text-right">
+                        <p class="font-bold text-sm"><span id="p-repName"></span></p>
+                        <p class="text-xs text-gray-500">
+                            <span id="p-repDept"></span> | HP: <span id="p-repHp"></span> | <span id="p-repEmail"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initDate();
+            initListeners();
+            initSalesRepSelect();
+        });
+
+        function initDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('quoteDate').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('quoteNoSeq').value = `001`; 
+            document.getElementById('quoteNoPrefix').innerText = `EVCP-${yyyy}${mm}${dd}-`;
+            updatePreview();
+        }
+
+        function initListeners() {
+            ['quoteDate', 'quoteNoSeq', 'customerName', 'customerContact', 'productModel', 'productPn', 'productType', 'productQty', 'unitPrice',
+             'termLeadTime', 'termPayment', 'termIncoterms', 'remarks'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => updatePreview());
+            });
+            
+            document.getElementById('quoteDate').addEventListener('change', (e) => {
+                const dateVal = e.target.value.replace(/-/g, '');
+                if(dateVal) document.getElementById('quoteNoPrefix').innerText = `EVCP-${dateVal}-`;
+                updatePreview();
+            });
+        }
+        
+        function initSalesRepSelect() {
+            const select = document.getElementById('salesRepSelect');
+            select.innerHTML = ''; 
+            const reps = (typeof SALES_REPS_DB !== 'undefined') ? SALES_REPS_DB : [
+                 { id: "dypark", name: "Dayeon Park", position: "Assistant Manager", dept: "Sales Team", email: "dypark@ase-semi.com", tel: "+82-31-329-0061", hp: "+82-10-7274-2617" }
+            ];
+            
+            reps.forEach(rep => {
+                const option = document.createElement('option');
+                option.value = rep.id;
+                // Force English display for Reps in this module
+                let engName = rep.name; // Ideally DB has English names. If not, use ID or existing name.
+                // Assuming sales_representatives_db.js has Korean names, we might need English mapping or just use as is.
+                // For USD quote, English is preferred. 
+                // Simple fallback: if name is Korean char, maybe show ID? 
+                // Let's just show what's in DB for now.
+                option.text = `${rep.name} ${rep.position}`;
+                select.appendChild(option);
+            });
+            changeSalesRep(); 
+        }
+
+        function changeSalesRep() {
+            const reps = (typeof SALES_REPS_DB !== 'undefined') ? SALES_REPS_DB : [];
+            const id = document.getElementById('salesRepSelect').value;
+            const rep = reps.find(r => r.id === id);
+            if(rep) {
+                document.getElementById('p-repName').innerText = `${rep.name} ${rep.position}`;
+                document.getElementById('p-repDept').innerText = rep.dept;
+                document.getElementById('p-repHp').innerText = rep.hp;
+                document.getElementById('p-repEmail').innerText = rep.email;
+            }
+        }
+
+        function formatNumberInput(input) {
+            // Allow decimals for USD
+            let val = input.value.replace(/[^0-9.]/g, '');
+            // Prevent multiple dots
+            const parts = val.split('.');
+            if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+            input.value = val;
+        }
+
+        function getVal(id) {
+            const val = document.getElementById(id).value.replace(/,/g, '');
+            return parseFloat(val) || 0;
+        }
+
+        function calculateTotal() {
+            const qty = parseFloat(document.getElementById('productQty').value) || 0;
+            const price = getVal('unitPrice');
+            const total = qty * price;
+            
+            document.getElementById('valTotal').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            updatePreview(total);
+        }
+
+        function updatePreview(totalAmount) {
+            if (totalAmount === undefined || typeof totalAmount !== 'number') {
+                 // Recalculate if called from event listener
+                 const qty = parseFloat(document.getElementById('productQty').value) || 0;
+                 const price = getVal('unitPrice');
+                 totalAmount = qty * price;
+            }
+
+            document.getElementById('p-date').innerText = document.getElementById('quoteDate').value;
+            const dateVal = document.getElementById('quoteDate').value.replace(/-/g, '');
+            if(dateVal) document.getElementById('quoteNoPrefix').innerText = `EVCP-${dateVal}-`;
+
+            document.getElementById('p-no').innerText = document.getElementById('quoteNoPrefix').innerText + document.getElementById('quoteNoSeq').value;
+            
+            document.getElementById('p-custName').innerText = document.getElementById('customerName').value || '__________';
+            document.getElementById('p-custContact').innerText = document.getElementById('customerContact').value;
+            document.getElementById('p-model').innerText = document.getElementById('productModel').value;
+            document.getElementById('p-pn').innerText = document.getElementById('productPn').value;
+            document.getElementById('p-typeName').innerText = document.getElementById('productType').value;
+            document.getElementById('p-qty').innerText = document.getElementById('productQty').value;
+            
+            const uPrice = getVal('unitPrice');
+            document.getElementById('p-unitPrice').innerText = uPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+            const totalStr = totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('p-amount').innerText = totalStr;
+            document.getElementById('p-total').innerText = totalStr;
+            
+            const totalTextEl = document.getElementById('p-totalText');
+            if(totalTextEl) totalTextEl.innerText = totalStr;
+            
+            // Terms
+            document.getElementById('p-leadTime').innerText = document.getElementById('termLeadTime').value;
+            document.getElementById('p-payment').innerText = document.getElementById('termPayment').value;
+            document.getElementById('p-incoterms').innerText = document.getElementById('termIncoterms').value || 'EXW';
+            document.getElementById('p-remarks').innerText = document.getElementById('remarks').value || 'N/A';
+        }
+    </script>
+</body>
+</html>
