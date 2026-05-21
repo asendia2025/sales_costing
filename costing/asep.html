@@ -520,15 +520,24 @@
         let currentLang = 'en';
 
         // --- SALES REPS DATA ---
-        const SALES_REPS_DB = [
-            { id: "dypark", name: "박다연", position: "대리", dept: "영업팀", email: "dypark@ase-semi.com", tel: "031-329-0061", hp: "010-7274-2617" },
-            { id: "yjhan", name: "한예진", position: "사원", dept: "영업팀", email: "yjhan@ase-semi.com", tel: "031-329-0022", hp: "010-9314-4181" },
-            { id: "sjlee", name: "이수정", position: "사원", dept: "영업팀", email: "soojung.lee@ase-semi.com", tel: "031-329-0061", hp: "010-4179-9597" },
-            { id: "jycho", name: "조재영", position: "대리", dept: "영업팀", email: "jycho@ase-semi.com", tel: "031-329-0000", hp: "010-4968-3178" },
-            { id: "jwlee", name: "이종욱", position: "차장", dept: "영업팀", email: "jwlee@ase-semi.com", tel: "031-329-0000", hp: "010-8314-4138" },
-            { id: "hdshin", name: "신현덕", position: "이사", dept: "영업본부", email: "hdshin@ase-semi.com", tel: "031-329-0000", hp: "010-9848-2330" },
-            { id: "tjben", name: "변태준", position: "상무", dept: "영업본부", email: "tjben@ase-semi.com", tel: "031-329-0000", hp: "010-2376-3891" }
-        ];
+const SALES_REPS_DB = [
+    { id: "dypark",    name: "박다연",        position: "대리", dept: "영업팀",  email: "dypark@ase-semi.com",      tel: "031-329-0061", hp: "010-7274-2617" },
+    { id: "yjhan",     name: "한예진",        position: "사원", dept: "영업팀",  email: "yjhan@ase-semi.com",       tel: "031-329-0022", hp: "010-9314-4181" },
+    { id: "sjlee",     name: "이수정",        position: "사원", dept: "영업팀",  email: "soojung.lee@ase-semi.com", tel: "031-329-0061", hp: "010-4179-9597" },
+    { id: "jycho",     name: "조재영",        position: "대리", dept: "영업팀",  email: "jycho@ase-semi.com",       tel: "031-329-0000", hp: "010-4968-3178" },
+    { id: "jwlee",     name: "이종욱",        position: "차장", dept: "영업팀",  email: "jwlee@ase-semi.com",       tel: "031-329-0000", hp: "010-8314-4138" },
+    { id: "kmlim",     name: "임경민",        position: "대리", dept: "영업팀",  email: "kmlim@ase-semi.com",       tel: "031-329-0000", hp: "010-2381-2508" },
+    { id: "hdshin",    name: "신현덕",        position: "이사", dept: "영업본부", email: "hdshin@ase-semi.com",     tel: "031-329-0000", hp: "010-9848-2330" },
+    { id: "tjben",     name: "변태준",        position: "상무", dept: "영업본부", email: "tjben@ase-semi.com",      tel: "031-329-0000", hp: "010-2376-3891" },
+    { id: "dypark_en", name: "DaYeon Park",   position: "",     dept: "Sales Team", email: "dypark@ase-semi.com",  tel: "031-329-0061", hp: "010-7274-2617" },
+    { id: "yjhan_en",  name: "YeJin Han",     position: "",     dept: "Sales Team", email: "yjhan@ase-semi.com",   tel: "031-329-0022", hp: "010-9314-4181" },
+    { id: "sjlee_en",  name: "SuJung Lee",    position: "",     dept: "Sales Team", email: "soojung.lee@ase-semi.com", tel: "031-329-0061", hp: "010-4179-9597" },
+    { id: "jycho_en",  name: "Jonathan Cho",  position: "",     dept: "",       email: "jycho@ase-semi.com",       tel: "031-329-0000", hp: "010-4968-3178" },
+    { id: "jwlee_en",  name: "John Lee",       position: "",     dept: "",       email: "jwlee@ase-semi.com",       tel: "031-329-0000", hp: "010-8314-4138" },
+    { id: "kmlim_en",  name: "KyeongMin Lim", position: "",     dept: "",       email: "kmlim@ase-semi.com",       tel: "031-329-0000", hp: "010-2381-2508" },
+    { id: "hdshin_en", name: "HD Shin",        position: "",     dept: "",       email: "hdshin@ase-semi.com",      tel: "031-329-0000", hp: "010-9848-2330" },
+    { id: "tjben_en",  name: "TJ Ben",         position: "",     dept: "",       email: "tjben@ase-semi.com",       tel: "031-329-0000", hp: "010-2376-3891" }
+];
 
         // --- TRANSLATIONS ---
         const LANG = {
