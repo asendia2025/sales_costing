@@ -55,6 +55,16 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
+        id: "kmlim",
+        name: "임경민",
+        position: "대리",
+        dept: "Sales Team",
+        email: "kmlim@ase-semi.com",
+        tel: "031-329-0000", // 대표 번호 (Direct Missing)
+        hp: "010-2381-2508",
+        fax: "031-329-0001"
+    },
+    {
         id: "hdshin",
         name: "신현덕",
         position: "이사",
@@ -76,7 +86,7 @@ const SALES_REPS_DB = [
     },
 
     {
-        id: "dypark",
+        id: "dypark_en",
         name: "Dayeon Park",
         position: "",
         dept: "Sales Team",
@@ -86,7 +96,7 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
-        id: "yjhan",
+        id: "yjhan_en",
         name: "Yejin Han",
         position: "",
         dept: "Sales Team",
@@ -96,7 +106,7 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
-        id: "sjlee",
+        id: "sjlee_en",
         name: "Sujung Lee",
         position: "",
         dept: "Sales Team",
@@ -106,7 +116,7 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
-        id: "jycho",
+        id: "jycho_en",
         name: "Jonathan",
         position: "",
         dept: "Sales Team",
@@ -116,7 +126,7 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
-        id: "jwlee",
+        id: "jwlee_en",
         name: "John Lee",
         position: "",
         dept: "Sales Team",
@@ -126,7 +136,17 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
-        id: "hdshin",
+        id: "kmlim_en",
+        name: "Kyungmin Lim",
+        position: "",
+        dept: "Sales Team",
+        email: "kmlim@ase-semi.com",
+        tel: "031-329-0000", // 대표 번호 (Direct Missing)
+        hp: "010-2381-2508",
+        fax: "031-329-0001"
+    },
+    {
+        id: "hdshin_en",
         name: "HD Shin",
         position: "",
         dept: "Sales Team",
@@ -136,7 +156,7 @@ const SALES_REPS_DB = [
         fax: "031-329-0001"
     },
     {
-        id: "tjben",
+        id: "tjben_en",
         name: "TJ Ben",
         position: "",
         dept: "Sales Team",
