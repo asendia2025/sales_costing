@@ -12,13 +12,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Fonts -->
+    <!-- Fonts (preconnect for faster load + display=swap to avoid blank text) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;700&family=Varela+Round&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; }
-        .font-serif { font-family: 'Noto Serif KR', serif; }
-        .font-english { font-family: 'Varela Round', sans-serif; }
+        /* 
+         * Font fallback chain: if Google Fonts CDN fails to load (corporate firewall,
+         * offline, slow network), the browser falls back through these OS-native
+         * Korean fonts so '견적서' looks consistent across Windows/Mac.
+         */
+        body { 
+            font-family: 'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', '나눔고딕', sans-serif; 
+        }
+        .font-serif { 
+            font-family: 'Noto Serif KR', 'Nanum Myeongjo', '나눔명조', 'AppleMyungjo', '애플명조', 'Batang', '바탕', serif; 
+        }
+        .font-english { 
+            font-family: 'Varela Round', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; 
+        }
         
         @media print {
             body * { visibility: hidden; }
@@ -125,6 +138,52 @@
                         <i data-lucide="plus-circle" class="w-3 h-3 mr-1"></i> <span id="lbl-btn-add-unit">상품 추가</span>
                     </button>
                 </div>
+
+                <!-- Handling Charge Guideline Panel -->
+                <div class="bg-amber-50 border border-amber-200 rounded-lg mb-3 overflow-hidden">
+                    <button type="button" onclick="toggleHcGuide()" class="w-full flex items-center justify-between p-2.5 text-left hover:bg-amber-100 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
+                            <span class="text-xs font-bold text-amber-900" id="lbl-hc-guide-title">ASENDIA Proxy Purchasing Handling Charge 기준</span>
+                        </div>
+                        <i data-lucide="chevron-down" id="hc-guide-chevron" class="w-4 h-4 text-amber-600 transition-transform"></i>
+                    </button>
+                    <div id="hc-guide-body" class="px-2.5 pb-2.5 hidden">
+                        <table class="w-full text-xs border border-amber-300 bg-white rounded">
+                            <thead class="bg-amber-100">
+                                <tr>
+                                    <th class="border border-amber-300 p-1 w-8">#</th>
+                                    <th class="border border-amber-300 p-1" id="hc-th-price">Price per 1ea (KRW)</th>
+                                    <th class="border border-amber-300 p-1 w-24" id="hc-th-rate">Handling Charge</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-center font-english">
+                                <tr><td class="border border-amber-200 p-1">1</td><td class="border border-amber-200 p-1">1 ~ 499,999</td><td class="border border-amber-200 p-1 font-bold text-amber-700">20%</td></tr>
+                                <tr><td class="border border-amber-200 p-1">2</td><td class="border border-amber-200 p-1">500,000 ~ 999,999</td><td class="border border-amber-200 p-1 font-bold text-amber-700">10%</td></tr>
+                                <tr><td class="border border-amber-200 p-1">3</td><td class="border border-amber-200 p-1">Over 1,000,000</td><td class="border border-amber-200 p-1 font-bold text-amber-700">5%</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-[10px] text-amber-800 mt-1.5 leading-tight" id="lbl-hc-guide-note">
+                            ※ 수수료율은 <b>1개당 단가(Unit Price)</b> 기준으로 결정되며, <b>합계 금액 = 단가 × 수량 × (1 + 수수료율)</b> 로 계산됩니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Display Mode Toggle: how the handling charge appears on the printed quote -->
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-2.5 mb-3">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="eye" class="w-4 h-4 text-slate-500"></i>
+                        <span class="text-xs font-bold text-slate-700" id="lbl-display-mode">견적서 표시 방식</span>
+                    </div>
+                    <div class="flex bg-white rounded-lg border border-slate-300 p-1">
+                        <button type="button" onclick="setDisplayMode('breakdown')" id="btn-mode-breakdown" class="px-3 py-1 text-[11px] font-bold rounded transition-colors bg-purple-600 text-white shadow-sm">
+                            <span id="lbl-mode-breakdown">수수료 분리</span>
+                        </button>
+                        <button type="button" onclick="setDisplayMode('combined')" id="btn-mode-combined" class="px-3 py-1 text-[11px] font-bold rounded transition-colors text-gray-500 hover:bg-slate-50">
+                            <span id="lbl-mode-combined">단가 포함</span>
+                        </button>
+                    </div>
+                </div>
                 
                 <div id="itemsContainer" class="space-y-4">
                     <!-- Items Injected Here -->
@@ -223,6 +282,20 @@
                         <!-- Rows injected by JS -->
                     </tbody>
                     <tfoot>
+                        <tr id="p-row-subtotal" class="border-t-2 border-black h-8">
+                            <td colspan="4" class="border border-black p-1 text-right pr-3 text-xs font-bold text-gray-700" id="lbl-subtotal">상품 소계 (Subtotal)</td>
+                            <td colspan="3" class="border border-black p-1 text-right pr-2 font-mono font-english text-xs font-bold">
+                                ₩ <span id="p-subtotal">0</span>
+                            </td>
+                        </tr>
+                        <tr id="p-row-handling" class="h-8 bg-amber-50">
+                            <td colspan="4" class="border border-black p-1 text-right pr-3 text-xs font-bold text-amber-800">
+                                <span id="lbl-handling">대행 수수료 (Handling Charge)</span> <span id="p-handling-detail" class="text-[10px] text-amber-700 font-normal"></span>
+                            </td>
+                            <td colspan="3" class="border border-black p-1 text-right pr-2 font-mono font-english text-xs font-bold text-amber-800">
+                                ₩ <span id="p-handling">0</span>
+                            </td>
+                        </tr>
                         <tr class="bg-purple-50 border-t-2 border-black h-10">
                             <td colspan="4" class="border border-black p-2 text-center font-bold text-base" id="lbl-total">합 계 (부가세별도)</td>
                             <td colspan="3" class="border border-black p-2 text-right font-bold text-lg text-purple-900 font-english">
@@ -234,10 +307,29 @@
             </div>
 
              <!-- Total Amount Text -->
-             <div class="bg-gray-50 p-3 border border-gray-300 rounded mb-8 text-center">
+             <div class="bg-gray-50 p-3 border border-gray-300 rounded mb-3 text-center">
                 <span class="text-gray-600 text-sm mr-2" id="lbl-total-text">총 견적 금액 (일금):</span>
                 <span id="p-koreanTotal" class="font-serif font-bold text-lg text-black mr-2"></span>
                 <span class="text-purple-800 font-bold text-lg font-english">(₩ <span id="p-totalAmountText">0</span>)</span>
+            </div>
+
+            <!-- Handling Charge Standard (footnote for customer) -->
+            <div id="p-hc-footnote" class="border border-gray-300 rounded p-2 mb-6 bg-gray-50">
+                <p class="text-[10px] font-bold text-gray-700 mb-1" id="lbl-hc-foot-title">※ ASENDIA Proxy Purchasing Handling Charge Standard</p>
+                <table class="w-full text-[10px] border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-center">
+                            <th class="border border-gray-400 px-1 py-0.5 w-8">#</th>
+                            <th class="border border-gray-400 px-1 py-0.5" id="lbl-hc-foot-price">Price per 1ea (KRW)</th>
+                            <th class="border border-gray-400 px-1 py-0.5 w-24" id="lbl-hc-foot-rate">Handling Charge</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center font-english">
+                        <tr><td class="border border-gray-300 px-1">1</td><td class="border border-gray-300 px-1">1 ~ 499,999</td><td class="border border-gray-300 px-1 font-bold">20%</td></tr>
+                        <tr><td class="border border-gray-300 px-1">2</td><td class="border border-gray-300 px-1">500,000 ~ 999,999</td><td class="border border-gray-300 px-1 font-bold">10%</td></tr>
+                        <tr><td class="border border-gray-300 px-1">3</td><td class="border border-gray-300 px-1">Over 1,000,000</td><td class="border border-gray-300 px-1 font-bold">5%</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <!-- Terms & Footer -->
@@ -273,6 +365,9 @@
                 basicInfo: "기본 정보",
                 inputDate: "견적일", inputNo: "견적 번호", inputCust: "고객사 명", inputContact: "고객 담당자",
                 unitTitle: "판매 상품 (Products)", btnAddUnit: "상품 추가",
+                hcGuideTitle: "ASENDIA Proxy Purchasing Handling Charge 기준",
+                hcGuideNote: "※ 수수료율은 <b>1개당 단가(Unit Price)</b> 기준으로 결정되며, <b>합계 금액 = 단가 × 수량 × (1 + 수수료율)</b> 로 계산됩니다.",
+                hcThPrice: "Price per 1ea (KRW)", hcThRate: "Handling Charge",
                 termsSection: "견적 조건", inputLead: "납기", inputPay: "결제", inputInco: "인코텀스", inputRem: "비고",
                 repSection: "영업 담당자",
                 title: "견적서",
@@ -281,9 +376,15 @@
                 suppName: "(주)아센디아", bizNo: "사업자등록번호:", type: "업태:", item: "종목:", addr: "주소:", rep: "대표자",
                 valType: "도소매/제조", valItem: "반도체부품", valAddr: "경기도 평택시 진위면 마산6로 113", valRep: "박 문 수",
                 tableTitle: "1. 견적 내역",
-                thNo: "순번", thName: "품명", thSpec: "모델 / 사양", thSn: "S/N", thQty: "수량", thPrice: "단가", thAmt: "합계",
+                thNo: "순번", thName: "품명", thSpec: "모델 / 사양", thSn: "S/N", thQty: "수량", thPrice: "단가",
+                thAmtBreakdown: "소계", thAmtCombined: "합계",
+                displayMode: "견적서 표시 방식", modeBreakdown: "수수료 분리", modeCombined: "단가 포함",
+                subtotalLabel: "상품 소계 (Subtotal)",
+                handlingLabel: "대행 수수료 (Handling Charge)",
                 totalLabel: "합 계 (부가세별도)",
                 totalTextLabel: "총 견적 금액 (일금):",
+                hcFootTitle: "※ ASENDIA Proxy Purchasing Handling Charge Standard",
+                hcFootPrice: "Price per 1ea (KRW)", hcFootRate: "Handling Charge",
                 termsTitle: "견적 조건",
                 leadTime: "납기", payment: "결제조건", incoterms: "인코텀스", remarks: "특이사항"
             },
@@ -292,6 +393,9 @@
                 basicInfo: "Basic Info",
                 inputDate: "Date", inputNo: "Quote No", inputCust: "Customer", inputContact: "Contact",
                 unitTitle: "Products", btnAddUnit: "Add Item",
+                hcGuideTitle: "ASENDIA Proxy Purchasing Handling Charge Standard",
+                hcGuideNote: "※ Rate is determined by <b>Unit Price per 1ea</b>. <b>Line Total = Unit Price × Qty × (1 + Rate)</b>.",
+                hcThPrice: "Price per 1ea (KRW)", hcThRate: "Handling Charge",
                 termsSection: "Terms & Conditions", inputLead: "Lead", inputPay: "Pay", inputInco: "Incoterms", inputRem: "Note",
                 repSection: "Sales Representative",
                 title: "QUOTATION",
@@ -300,25 +404,43 @@
                 suppName: "ASENDIA Co., Ltd.", bizNo: "Reg. No:", type: "Type:", item: "Item:", addr: "Addr:", rep: "Rep:",
                 valType: "Wholesale/Mfg", valItem: "Semiconductor Parts", valAddr: "113, Masan 6-ro, Jinwi-myeon, Pyeongtaek-si, Gyeonggi-do", valRep: "Moon Soo, Park",
                 tableTitle: "1. Quotation Summary",
-                thNo: "No.", thName: "Item Name", thSpec: "Model / Spec", thSn: "S/N", thQty: "Qty", thPrice: "Unit Price", thAmt: "Amount",
+                thNo: "No.", thName: "Item Name", thSpec: "Model / Spec", thSn: "S/N", thQty: "Qty", thPrice: "Unit Price",
+                thAmtBreakdown: "Subtotal", thAmtCombined: "Amount",
+                displayMode: "Quote Display", modeBreakdown: "Itemized Fee", modeCombined: "All-in Price",
+                subtotalLabel: "Subtotal",
+                handlingLabel: "Handling Charge",
                 totalLabel: "Total Amount (VAT Excluded)",
                 totalTextLabel: "Total Amount:",
+                hcFootTitle: "※ ASENDIA Proxy Purchasing Handling Charge Standard",
+                hcFootPrice: "Price per 1ea (KRW)", hcFootRate: "Handling Charge",
                 termsTitle: "Terms & Conditions",
                 leadTime: "Lead Time", payment: "Payment", incoterms: "Incoterms", remarks: "Remarks"
             }
         };
         let currentLang = 'ko';
-
-        const SALES_REPS_DB = [
-            { id: "dypark", name: "박다연", position: "대리", dept: "영업팀", email: "dypark@ase-semi.com", tel: "031-329-0061", hp: "010-7274-2617" },
-            { id: "yjhan", name: "한예진", position: "사원", dept: "영업팀", email: "yjhan@ase-semi.com", tel: "031-329-0022", hp: "010-9314-4181" },
-            { id: "sjlee", name: "이수정", position: "사원", dept: "영업팀", email: "soojung.lee@ase-semi.com", tel: "031-329-0061", hp: "010-4179-9597" },
-            { id: "jycho", name: "조재영", position: "대리", dept: "영업팀", email: "jycho@ase-semi.com", tel: "031-329-0000", hp: "010-4968-3178" },
-            { id: "jwlee", name: "이종욱", position: "차장", dept: "영업팀", email: "jwlee@ase-semi.com", tel: "031-329-0000", hp: "010-8314-4138" },
-            { id: "hdshin", name: "신현덕", position: "이사", dept: "영업본부", email: "hdshin@ase-semi.com", tel: "031-329-0000", hp: "010-9848-2330" },
-            { id: "tjben", name: "변태준", position: "상무", dept: "영업본부", email: "tjben@ase-semi.com", tel: "031-329-0000", hp: "010-2376-3891" }
-        ];
-
+        // 'breakdown' = show Subtotal + Handling Charge + Total (transparent, default)
+        // 'combined'  = show only the final unit price (handling charge baked in), hide breakdown rows
+        let displayMode = 'breakdown';
+<!--
+const SALES_REPS_DB = [
+    { id: "dypark",    name: "박다연",        position: "대리", dept: "영업팀",  email: "dypark@ase-semi.com",      tel: "031-329-0061", hp: "010-7274-2617" },
+    { id: "yjhan",     name: "한예진",        position: "사원", dept: "영업팀",  email: "yjhan@ase-semi.com",       tel: "031-329-0022", hp: "010-9314-4181" },
+    { id: "sjlee",     name: "이수정",        position: "사원", dept: "영업팀",  email: "soojung.lee@ase-semi.com", tel: "031-329-0061", hp: "010-4179-9597" },
+    { id: "jycho",     name: "조재영",        position: "대리", dept: "영업팀",  email: "jycho@ase-semi.com",       tel: "031-329-0000", hp: "010-4968-3178" },
+    { id: "jwlee",     name: "이종욱",        position: "차장", dept: "영업팀",  email: "jwlee@ase-semi.com",       tel: "031-329-0000", hp: "010-8314-4138" },
+    { id: "kmlim",     name: "임경민",        position: "대리", dept: "영업팀",  email: "kmlim@ase-semi.com",       tel: "031-329-0000", hp: "010-2381-2508" },
+    { id: "hdshin",    name: "신현덕",        position: "이사", dept: "영업본부", email: "hdshin@ase-semi.com",     tel: "031-329-0000", hp: "010-9848-2330" },
+    { id: "tjben",     name: "변태준",        position: "상무", dept: "영업본부", email: "tjben@ase-semi.com",      tel: "031-329-0000", hp: "010-2376-3891" },
+    { id: "dypark_en", name: "DaYeon Park",   position: "",     dept: "Sales Team", email: "dypark@ase-semi.com",  tel: "031-329-0061", hp: "010-7274-2617" },
+    { id: "yjhan_en",  name: "YeJin Han",     position: "",     dept: "Sales Team", email: "yjhan@ase-semi.com",   tel: "031-329-0022", hp: "010-9314-4181" },
+    { id: "sjlee_en",  name: "SuJung Lee",    position: "",     dept: "Sales Team", email: "soojung.lee@ase-semi.com", tel: "031-329-0061", hp: "010-4179-9597" },
+    { id: "jycho_en",  name: "Jonathan Cho",  position: "",     dept: "",       email: "jycho@ase-semi.com",       tel: "031-329-0000", hp: "010-4968-3178" },
+    { id: "jwlee_en",  name: "John Lee",       position: "",     dept: "",       email: "jwlee@ase-semi.com",       tel: "031-329-0000", hp: "010-8314-4138" },
+    { id: "kmlim_en",  name: "KyeongMin Lim", position: "",     dept: "",       email: "kmlim@ase-semi.com",       tel: "031-329-0000", hp: "010-2381-2508" },
+    { id: "hdshin_en", name: "HD Shin",        position: "",     dept: "",       email: "hdshin@ase-semi.com",      tel: "031-329-0000", hp: "010-9848-2330" },
+    { id: "tjben_en",  name: "TJ Ben",         position: "",     dept: "",       email: "tjben@ase-semi.com",       tel: "031-329-0000", hp: "010-2376-3891" }
+];
+-->
         let items = [
             { id: Date.now(), name: '', model: '', sn: '', qty: 1, price: 0 }
         ];
@@ -380,11 +502,55 @@
             if (['qty', 'price'].includes(field)) val = parseFloat(value) || 0;
             items[index][field] = val;
             
-            // DOM Update for efficiency
-            const rowTotal = items[index].qty * items[index].price;
-            const totalEl = document.getElementById(`item-total-${index}`);
-            if(totalEl) totalEl.innerText = `₩${rowTotal.toLocaleString()}`;
+            // DOM Update for efficiency - now includes handling charge breakdown
+            const item = items[index];
+            const rowSubtotal = item.qty * item.price;
+            const rate = getHandlingRate(item.price);
+            const handlingAmt = rowSubtotal * rate;
+            const rowTotal = rowSubtotal + handlingAmt;
+            const ratePct = Math.round(rate * 100);
             
+            const subEl = document.getElementById(`item-subtotal-${index}`);
+            const rateEl = document.getElementById(`item-rate-${index}`);
+            const hcEl = document.getElementById(`item-handling-${index}`);
+            const totalEl = document.getElementById(`item-total-${index}`);
+            if (subEl) subEl.innerText = `₩${rowSubtotal.toLocaleString()}`;
+            if (rateEl) rateEl.innerText = `(${ratePct}%)`;
+            if (hcEl) hcEl.innerText = `₩${handlingAmt.toLocaleString()}`;
+            if (totalEl) totalEl.innerText = `₩${rowTotal.toLocaleString()}`;
+            
+            updatePreview();
+        }
+
+        // ---- Handling Charge tier logic (per attached standard) ----
+        // 1 ~ 499,999    → 20%
+        // 500,000 ~ 999,999 → 10%
+        // Over 1,000,000 → 5%
+        function getHandlingRate(unitPrice) {
+            const p = Number(unitPrice) || 0;
+            if (p >= 1000000) return 0.05;
+            if (p >= 500000)  return 0.10;
+            if (p >= 1)       return 0.20;
+            return 0;
+        }
+
+        // Toggle the guideline panel in the input form
+        function toggleHcGuide() {
+            const body = document.getElementById('hc-guide-body');
+            const chev = document.getElementById('hc-guide-chevron');
+            const isHidden = body.classList.toggle('hidden');
+            chev.style.transform = isHidden ? '' : 'rotate(180deg)';
+        }
+
+        // Switch how Handling Charge appears on the printed quote.
+        // 'breakdown' = unit price stays as cost, fee shown as separate line in totals.
+        // 'combined'  = unit price already includes fee, breakdown rows + footnote hidden.
+        function setDisplayMode(mode) {
+            displayMode = mode;
+            const onCls = "px-3 py-1 text-[11px] font-bold rounded transition-colors bg-purple-600 text-white shadow-sm";
+            const offCls = "px-3 py-1 text-[11px] font-bold rounded transition-colors text-gray-500 hover:bg-slate-50";
+            document.getElementById('btn-mode-breakdown').className = mode === 'breakdown' ? onCls : offCls;
+            document.getElementById('btn-mode-combined').className  = mode === 'combined'  ? onCls : offCls;
             updatePreview();
         }
 
@@ -393,7 +559,12 @@
             container.innerHTML = ''; 
 
             items.forEach((item, index) => {
-                const rowTotal = item.qty * item.price;
+                const rowSubtotal = item.qty * item.price;
+                const rate = getHandlingRate(item.price);
+                const handlingAmt = rowSubtotal * rate;
+                const rowTotal = rowSubtotal + handlingAmt;
+                const ratePct = Math.round(rate * 100);
+                
                 const card = document.createElement('div');
                 card.className = "bg-white border border-gray-300 rounded-lg shadow-sm p-4 mb-4 relative";
                 card.innerHTML = `
@@ -413,17 +584,30 @@
                                  <input type="text" value="${item.sn}" oninput="updateItem(${index}, 'sn', this.value)" placeholder="Serial No." class="w-full p-1.5 border rounded text-xs font-mono bg-yellow-50">
                              </div>
                              <div class="w-1/3">
-                                <label class="text-[10px] text-gray-500 font-bold">수량</label>
-                                <input type="number" value="${item.qty}" oninput="updateItem(${index}, 'qty', this.value)" class="w-full p-1.5 border rounded text-center text-xs">
+                                <label class="text-[10px] text-gray-500 font-bold">수량 (Qty)</label>
+                                <input type="number" min="1" value="${item.qty}" oninput="updateItem(${index}, 'qty', this.value)" class="w-full p-1.5 border rounded text-center text-xs">
                             </div>
                             <div class="w-1/3">
-                                <label class="text-[10px] text-gray-500 font-bold">단가</label>
-                                <input type="number" value="${item.price}" oninput="updateItem(${index}, 'price', this.value)" class="w-full p-1.5 border rounded text-right text-xs font-mono">
+                                <label class="text-[10px] text-gray-500 font-bold">단가 (Unit Price)</label>
+                                <input type="number" min="0" value="${item.price}" oninput="updateItem(${index}, 'price', this.value)" class="w-full p-1.5 border rounded text-right text-xs font-mono">
                             </div>
                         </div>
-                        <div class="text-right mt-1 border-t pt-2">
-                            <span class="text-xs text-gray-400 mr-2">Total:</span>
-                            <span class="font-bold text-purple-600 text-sm font-mono" id="item-total-${index}">₩${rowTotal.toLocaleString()}</span>
+                        <!-- Handling Charge breakdown for this item -->
+                        <div class="border-t pt-2 mt-1 bg-amber-50/50 -mx-4 px-4 pb-2 -mb-2 rounded-b-lg">
+                            <div class="grid grid-cols-3 gap-2 text-[10px]">
+                                <div>
+                                    <div class="text-gray-500">소계 (Subtotal)</div>
+                                    <div class="font-bold font-mono text-gray-700" id="item-subtotal-${index}">₩${rowSubtotal.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500">수수료율 <span id="item-rate-${index}" class="text-amber-700 font-bold">(${ratePct}%)</span></div>
+                                    <div class="font-bold font-mono text-amber-700" id="item-handling-${index}">₩${handlingAmt.toLocaleString()}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-gray-500">최종 합계 (Total)</div>
+                                    <div class="font-bold font-mono text-purple-700 text-sm" id="item-total-${index}">₩${rowTotal.toLocaleString()}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -452,6 +636,11 @@
             document.getElementById('lbl-input-contact').innerText = t.inputContact;
             document.getElementById('lbl-unit-title').innerText = t.unitTitle;
             document.getElementById('lbl-btn-add-unit').innerText = t.btnAddUnit;
+            // Handling Charge guide labels
+            document.getElementById('lbl-hc-guide-title').innerText = t.hcGuideTitle;
+            document.getElementById('lbl-hc-guide-note').innerHTML = t.hcGuideNote;
+            document.getElementById('hc-th-price').innerText = t.hcThPrice;
+            document.getElementById('hc-th-rate').innerText = t.hcThRate;
             document.getElementById('lbl-terms-section').innerText = t.termsSection;
             document.getElementById('lbl-input-lead').innerText = t.inputLead;
             document.getElementById('lbl-input-pay').innerText = t.inputPay;
@@ -493,9 +682,18 @@
             document.getElementById('th-sn').innerText = t.thSn;
             document.getElementById('th-qty').innerText = t.thQty;
             document.getElementById('th-price').innerText = t.thPrice;
-            document.getElementById('th-amt').innerText = t.thAmt;
+            document.getElementById('th-amt').innerText = (displayMode === 'combined') ? t.thAmtCombined : t.thAmtBreakdown;
+            document.getElementById('lbl-display-mode').innerText = t.displayMode;
+            document.getElementById('lbl-mode-breakdown').innerText = t.modeBreakdown;
+            document.getElementById('lbl-mode-combined').innerText = t.modeCombined;
+            document.getElementById('lbl-subtotal').innerText = t.subtotalLabel;
+            document.getElementById('lbl-handling').innerText = t.handlingLabel;
             document.getElementById('lbl-total').innerText = t.totalLabel;
             document.getElementById('lbl-total-text').innerText = t.totalTextLabel;
+            // Handling charge footnote on the printed quote
+            document.getElementById('lbl-hc-foot-title').innerText = t.hcFootTitle;
+            document.getElementById('lbl-hc-foot-price').innerText = t.hcFootPrice;
+            document.getElementById('lbl-hc-foot-rate').innerText = t.hcFootRate;
 
             document.getElementById('lbl-terms-title').innerText = t.termsTitle;
             document.getElementById('lbl-leadTime').innerText = t.leadTime;
@@ -529,12 +727,24 @@
 
             const tbody = document.getElementById('p-itemsBody');
             tbody.innerHTML = '';
-            let grandTotal = 0;
+            let subtotal = 0;
+            let handlingTotal = 0;
+            const rateBreakdown = { 20: 0, 10: 0, 5: 0 }; // for showing which tiers were applied
             const t = LANG[currentLang];
+            const combined = (displayMode === 'combined');
 
             items.forEach((item, idx) => {
-                const total = item.qty * item.price;
-                grandTotal += total;
+                const lineSub = item.qty * item.price;
+                const rate = getHandlingRate(item.price);
+                const lineHc = lineSub * rate;
+                subtotal += lineSub;
+                handlingTotal += lineHc;
+                if (rate > 0) rateBreakdown[Math.round(rate * 100)] += lineHc;
+
+                // In 'combined' mode, the displayed unit price already includes the handling charge.
+                // In 'breakdown' mode, displayed unit price is the raw cost.
+                const displayUnit = combined ? Math.round(item.price * (1 + rate)) : item.price;
+                const displayLine = displayUnit * item.qty;
 
                 const tr = document.createElement('tr');
                 tr.className = "text-center h-12 border-b border-gray-200 align-middle";
@@ -546,8 +756,8 @@
                     </td>
                     <td class="border-x border-black p-1 text-xs font-mono font-english">${item.sn || '-'}</td>
                     <td class="border-x border-black p-1 font-english text-xs">${item.qty}</td>
-                    <td class="border-x border-black p-1 text-right pr-2 font-mono font-english text-xs">₩${item.price.toLocaleString()}</td>
-                    <td class="border-x border-black p-1 text-right pr-2 font-bold font-mono font-english text-xs">₩${total.toLocaleString()}</td>
+                    <td class="border-x border-black p-1 text-right pr-2 font-mono font-english text-xs">₩${displayUnit.toLocaleString()}</td>
+                    <td class="border-x border-black p-1 text-right pr-2 font-bold font-mono font-english text-xs">₩${displayLine.toLocaleString()}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -555,9 +765,36 @@
             const emptyCount = Math.max(0, 8 - items.length);
             for(let i=0; i<emptyCount; i++) tbody.innerHTML += `<tr class="h-10 border-b border-gray-200"><td class="border-x border-black"></td><td class="border-x border-black"></td><td class="border-x border-black"></td><td class="border-x border-black"></td><td class="border-x border-black"></td><td class="border-x border-black"></td><td class="border-x border-black"></td></tr>`;
 
+            const grandTotal = subtotal + handlingTotal;
+            document.getElementById('p-subtotal').innerText = subtotal.toLocaleString();
+            document.getElementById('p-handling').innerText = handlingTotal.toLocaleString();
             document.getElementById('p-totalAmount').innerText = grandTotal.toLocaleString();
             document.getElementById('p-totalAmountText').innerText = grandTotal.toLocaleString();
             document.getElementById('p-koreanTotal').innerText = currentLang === 'ko' ? numberToKorean(grandTotal) : '';
+
+            // Show which tiers were applied (e.g. "20% + 10%")
+            const appliedRates = Object.entries(rateBreakdown)
+                .filter(([_, v]) => v > 0)
+                .map(([k, _]) => `${k}%`);
+            const detailEl = document.getElementById('p-handling-detail');
+            if (detailEl) detailEl.innerText = appliedRates.length ? `· 적용: ${appliedRates.join(' + ')}` : '';
+
+            // Show or hide breakdown rows + footnote table per display mode
+            const rowSub = document.getElementById('p-row-subtotal');
+            const rowHc  = document.getElementById('p-row-handling');
+            const footnote = document.getElementById('p-hc-footnote');
+            const thAmtEl = document.getElementById('th-amt');
+            if (combined) {
+                rowSub.style.display = 'none';
+                rowHc.style.display = 'none';
+                footnote.style.display = 'none';
+                thAmtEl.innerText = t.thAmtCombined;
+            } else {
+                rowSub.style.display = '';
+                rowHc.style.display = '';
+                footnote.style.display = '';
+                thAmtEl.innerText = t.thAmtBreakdown;
+            }
 
             document.getElementById('p-leadTime').innerText = translateTerms(document.getElementById('termLeadTime').value, 'leadTime');
             document.getElementById('p-payment').innerText = translateTerms(document.getElementById('termPayment').value, 'payment');
